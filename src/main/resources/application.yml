@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: libreuml-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/libreumldb
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true

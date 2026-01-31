@@ -1,0 +1,20 @@
+meta {
+  name: Login User
+  type: http
+  seq: 2
+}
+
+post {
+  url: '''
+    {
+      "email": "teacher@libreuml.com",
+      "password": "SecurePassword123!"
+    http://localhost:8080/api/v1/auth/login
+'''
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
