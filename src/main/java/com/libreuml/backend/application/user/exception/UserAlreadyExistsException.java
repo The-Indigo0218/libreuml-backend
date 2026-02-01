@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.user.port.exception;
+package com.libreuml.backend.application.user.exception;
 
 public class UserAlreadyExistsException extends RuntimeException {
     public UserAlreadyExistsException(String message) {

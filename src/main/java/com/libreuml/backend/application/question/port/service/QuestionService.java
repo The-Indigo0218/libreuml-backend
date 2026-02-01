@@ -1,6 +1,6 @@
 package com.libreuml.backend.application.question.port.service;
 
-import com.libreuml.backend.application.question.port.exception.QuestionNotFoundException;
+import com.libreuml.backend.application.question.exception.QuestionNotFoundException;
 import com.libreuml.backend.application.question.port.in.CreateQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.GetQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.UpdateQuestionUseCase;
@@ -10,7 +10,7 @@ import com.libreuml.backend.application.question.port.in.dto.UpdateSolvedStatusC
 import com.libreuml.backend.application.question.port.in.dto.UpdateTitleAndContentCommand;
 import com.libreuml.backend.application.question.port.mapper.QuestionMapper;
 import com.libreuml.backend.application.question.port.out.QuestionRepository;
-import com.libreuml.backend.application.user.port.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Question;
 import com.libreuml.backend.domain.model.User;
