@@ -28,7 +28,7 @@ public class GlobalControllerAdvice {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), "USER_ALREADY_EXISTS");
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), "USER_ALREADY_EXISTS");
     }
 
 
