@@ -4,12 +4,16 @@ import com.libreuml.backend.application.question.port.exception.QuestionNotFound
 import com.libreuml.backend.application.question.port.in.CreateQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.GetQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.UpdateQuestionUseCase;
+import com.libreuml.backend.application.question.port.in.dto.UpdateActiveStatusCommand;
 import com.libreuml.backend.application.question.port.in.dto.CreateQuestionCommand;
-import com.libreuml.backend.application.question.port.in.dto.UpdateQuestionStatusCommand;
+import com.libreuml.backend.application.question.port.in.dto.UpdateSolvedStatusCommand;
 import com.libreuml.backend.application.question.port.in.dto.UpdateTitleAndContentCommand;
 import com.libreuml.backend.application.question.port.mapper.QuestionMapper;
 import com.libreuml.backend.application.question.port.out.QuestionRepository;
+import com.libreuml.backend.application.user.port.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Question;
+import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,7 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
 
     private final QuestionRepository questionRepository;
     private final QuestionMapper questionMapper;
+    private final UserRepository userRepository;
 
     @Override
     public Question create(CreateQuestionCommand command) {
@@ -36,10 +41,19 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
     }
 
     @Override
-    public Question updateActiveStatus(UpdateQuestionStatusCommand command) {
+    public Question updateSolvedStatus(UpdateSolvedStatusCommand command) {
         Question question = findQuestionOrThrow(command.id());
         questionMapper.updateFromCommand(command, question);
         return questionRepository.save(question);
+    }
+
+    @Override
+    public void updateActivateStatus(UpdateActiveStatusCommand command) {
+        User user = userRepository.getUserById(command.user()).orElseThrow(() -> new UserNotFoundException("User with id " + command.user() + " not found"));
+        Question question = findQuestionOrThrow(command.id());
+        question.deactivate(user);
+
+        questionRepository.save(question);
     }
 
     @Override
