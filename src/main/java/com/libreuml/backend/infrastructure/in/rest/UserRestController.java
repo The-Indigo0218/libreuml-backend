@@ -1,9 +1,8 @@
 package com.libreuml.backend.infrastructure.in.rest;
 
-import com.libreuml.backend.application.port.in.dto.CreateUserCommand;
-import com.libreuml.backend.application.port.in.CreateUserUseCase;
-import com.libreuml.backend.application.port.in.GetUserUseCase;
-import com.libreuml.backend.application.port.in.dto.GetUserByIdCommand;
+import com.libreuml.backend.application.user.port.in.dto.CreateUserCommand;
+import com.libreuml.backend.application.user.port.in.CreateUserUseCase;
+import com.libreuml.backend.application.user.port.in.GetUserUseCase;
 import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.infrastructure.in.rest.dto.RegisterRequest;
 import com.libreuml.backend.infrastructure.in.rest.dto.UserWebResponse;
@@ -32,7 +31,6 @@ public class UserRestController {
                 .fullName(request.fullName())
                 .role(request.role())
                 .build();
-
         User createdUser = createUserUseCase.create(command);
 
         UserWebResponse response = toWebResponse(createdUser);
@@ -41,17 +39,12 @@ public class UserRestController {
                 .path("/{id}")
                 .buildAndExpand(response.id())
                 .toUri();
-
         return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserWebResponse> getUser(@PathVariable UUID id) {
-
-
-        var command = new GetUserByIdCommand(id);
-        User user = getUserUseCase.getUserById(command);
-
+        User user = getUserUseCase.getUserById(id);
         return ResponseEntity.ok(toWebResponse(user));
     }
 

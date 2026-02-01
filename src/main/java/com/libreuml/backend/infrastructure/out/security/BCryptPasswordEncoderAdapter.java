@@ -1,6 +1,6 @@
 package com.libreuml.backend.infrastructure.out.security;
 
-import com.libreuml.backend.application.port.out.PasswordEncoderPort;
+import com.libreuml.backend.application.user.port.out.PasswordEncoderPort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 

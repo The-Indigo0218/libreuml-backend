@@ -18,4 +18,8 @@ public class Question {
     private Boolean active;
     private LocalDateTime createdAt;
     private UUID creatorId;
+
+    public void deactivate() {
+        this.active = false;
+    }
 }

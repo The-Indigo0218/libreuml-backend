@@ -1,7 +1,7 @@
 package com.libreuml.backend.infrastructure.in.rest;
 
-import com.libreuml.backend.application.port.in.dto.LoginCommand;
-import com.libreuml.backend.application.port.in.LoginUseCase;
+import com.libreuml.backend.application.user.port.in.dto.LoginCommand;
+import com.libreuml.backend.application.user.port.in.LoginUseCase;
 import com.libreuml.backend.infrastructure.in.rest.dto.LoginRequest;
 import com.libreuml.backend.infrastructure.in.rest.dto.TokenResponse;
 import jakarta.validation.Valid;
