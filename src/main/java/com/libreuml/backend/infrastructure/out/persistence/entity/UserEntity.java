@@ -41,7 +41,6 @@ public class UserEntity {
 
     private Boolean active;
 
-    @CreatedDate
     @Column(name = "joined_at")
     private LocalDate joinedAt;
 

@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.port.in.dto;
+package com.libreuml.backend.application.user.port.in.dto;
 
 import com.libreuml.backend.domain.model.RoleEnum;
 import lombok.Builder;

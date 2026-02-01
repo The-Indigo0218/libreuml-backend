@@ -1,6 +1,6 @@
 package com.libreuml.backend.infrastructure.out.persistence;
 
-import com.libreuml.backend.application.port.out.UserRepository;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.infrastructure.out.persistence.entity.UserEntity;
 import com.libreuml.backend.infrastructure.out.persistence.mapper.UserMapper;

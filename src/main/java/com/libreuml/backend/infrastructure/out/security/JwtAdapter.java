@@ -1,6 +1,6 @@
 package com.libreuml.backend.infrastructure.out.security;
 
-import com.libreuml.backend.application.port.out.TokenProviderPort;
+import com.libreuml.backend.application.user.port.out.TokenProviderPort;
 import com.libreuml.backend.domain.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

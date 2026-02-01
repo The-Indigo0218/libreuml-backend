@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.port.out;
+package com.libreuml.backend.application.user.port.out;
 
 import com.libreuml.backend.domain.model.User;
 

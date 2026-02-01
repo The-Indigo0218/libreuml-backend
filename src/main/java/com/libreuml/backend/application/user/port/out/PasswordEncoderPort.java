@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.port.out;
+package com.libreuml.backend.application.user.port.out;
 
 public interface PasswordEncoderPort {
 

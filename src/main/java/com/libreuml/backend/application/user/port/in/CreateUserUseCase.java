@@ -1,7 +1,7 @@
-package com.libreuml.backend.application.port.in;
+package com.libreuml.backend.application.user.port.in;
 
 import com.libreuml.backend.domain.model.User;
-import com.libreuml.backend.application.port.in.dto.CreateUserCommand;
+import com.libreuml.backend.application.user.port.in.dto.CreateUserCommand;
 
 public interface CreateUserUseCase {
 
