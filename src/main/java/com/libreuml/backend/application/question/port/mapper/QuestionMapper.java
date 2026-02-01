@@ -1,7 +1,7 @@
 package com.libreuml.backend.application.question.port.mapper;
 
 import com.libreuml.backend.application.question.port.in.dto.CreateQuestionCommand;
-import com.libreuml.backend.application.question.port.in.dto.UpdateQuestionStatusCommand;
+import com.libreuml.backend.application.question.port.in.dto.UpdateSolvedStatusCommand;
 import com.libreuml.backend.application.question.port.in.dto.UpdateTitleAndContentCommand;
 import com.libreuml.backend.domain.model.Question;
 import org.mapstruct.Mapper;
@@ -16,9 +16,10 @@ public interface QuestionMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "creatorId", source = "creatorId")
+    @Mapping(target = "imageUrls", source = "imageUrls", defaultValue = "java.util.Collections.emptyList()")
     Question toDomain(CreateQuestionCommand command);
 
     void updateFromCommand(UpdateTitleAndContentCommand command, @MappingTarget Question question);
 
-    void updateFromCommand(UpdateQuestionStatusCommand command, @MappingTarget Question question);
+    void updateFromCommand(UpdateSolvedStatusCommand command, @MappingTarget Question question);
 }
