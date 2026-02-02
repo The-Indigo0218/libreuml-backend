@@ -1,7 +1,7 @@
 package com.libreuml.backend.application.user.port.service;
 
-import com.libreuml.backend.application.user.port.exception.UserAlreadyExistsException;
-import com.libreuml.backend.application.user.port.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.mapper.UserFactory;
 import com.libreuml.backend.application.user.port.in.GetUserUseCase;
 import com.libreuml.backend.application.user.port.in.LoginUseCase;

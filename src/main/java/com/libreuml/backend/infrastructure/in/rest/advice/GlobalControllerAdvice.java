@@ -1,7 +1,7 @@
 package com.libreuml.backend.infrastructure.in.rest.advice;
 
-import com.libreuml.backend.application.user.port.exception.UserAlreadyExistsException;
-import com.libreuml.backend.application.user.port.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

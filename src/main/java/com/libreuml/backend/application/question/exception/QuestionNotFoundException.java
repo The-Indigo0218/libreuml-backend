@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.question.port.exception;
+package com.libreuml.backend.application.question.exception;
 
 public class QuestionNotFoundException extends RuntimeException {
     public QuestionNotFoundException(String message) {
