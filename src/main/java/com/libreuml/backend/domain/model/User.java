@@ -32,5 +32,12 @@ public abstract class User {
 
     private SocialProfile socialProfile;
 
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void desactivate() {
+        this.active = false;
+    }
 
 }
