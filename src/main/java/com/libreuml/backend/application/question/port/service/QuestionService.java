@@ -1,5 +1,7 @@
 package com.libreuml.backend.application.question.port.service;
 
+import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.question.exception.QuestionNotFoundException;
 import com.libreuml.backend.application.question.port.in.CreateQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.GetQuestionUseCase;
@@ -17,7 +19,7 @@ import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+
 import java.util.UUID;
 
 @Service
@@ -62,18 +64,18 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
     }
 
     @Override
-    public List<Question> getQuestionByTitle(String title) {
-        return questionRepository.findAllByTitleContainingIgnoreCase(title);
+    public PagedResult<Question> getQuestionByTitle(String title, PaginationCommand paginationCommand) {
+        return questionRepository.findAllByTitleContainingIgnoreCase(title, paginationCommand);
     }
 
     @Override
-    public List<Question> getQuestionByCreatorId(UUID id) {
-        return questionRepository.findAllQuestionsByCreatorId(id);
+    public PagedResult<Question> getQuestionByCreatorId(UUID id, PaginationCommand command) {
+        return questionRepository.findAllQuestionsByCreatorId(id, command);
     }
 
     @Override
-    public List<Question> getActiveQuestions() {
-        return questionRepository.findAllActiveQuestions();
+    public PagedResult<Question> getActiveQuestions(PaginationCommand paginationCommand) {
+        return questionRepository.findAllActiveQuestions(paginationCommand);
     }
 
     private Question findQuestionOrThrow(UUID id) {
