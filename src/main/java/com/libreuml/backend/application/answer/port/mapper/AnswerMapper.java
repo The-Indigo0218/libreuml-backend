@@ -19,5 +19,6 @@ public interface AnswerMapper {
     @Mapping(target = "questionId", source = "questionId")
     Answer toDomain(CreateAnswerCommand command);
 
+    @Mapping(target = "id", ignore = true)
     void updateContentFromCommand(UpdateAnswerContentCommand command, @MappingTarget Answer answer);
 }

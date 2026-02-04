@@ -19,7 +19,9 @@ public interface QuestionMapper {
     @Mapping(target = "imageUrls", source = "imageUrls", defaultValue = "java.util.Collections.emptyList()")
     Question toDomain(CreateQuestionCommand command);
 
+    @Mapping(target = "id", ignore = true)
     void updateFromCommand(UpdateTitleAndContentCommand command, @MappingTarget Question question);
 
+    @Mapping(target = "id", ignore = true)
     void updateFromCommand(UpdateSolvedStatusCommand command, @MappingTarget Question question);
 }
