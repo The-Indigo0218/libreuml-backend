@@ -16,6 +16,7 @@ import com.libreuml.backend.domain.model.Answer;
 import com.libreuml.backend.domain.model.Question;
 import com.libreuml.backend.domain.model.RoleEnum;
 import com.libreuml.backend.domain.model.User;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -75,14 +76,17 @@ public class AnswerService implements GetAnswerUseCase, CreateAnswerUseCase, Upd
     }
 
     @Override
+    @Transactional
     public Answer updateAcceptStatus(UpdateAcceptAnswerCommand command) {
         User user = getUserOrThrow(command.userId());
         Answer answer = getAnswerOrThrow(command.answerId());
         Question question = getQuestionOrThrow(answer.getQuestionId());
-        if (!question.getCreatorId().equals(user.getId()) || !user.getRole().equals(RoleEnum.MODERATOR)) {
+        if (!question.getCreatorId().equals(user.getId()) && !user.getRole().equals(RoleEnum.MODERATOR)) {
             throw new UserNotAuthorizedException("User is not authorized to accept this answer");
         }
+        question.resolve(user);
         answer.accept();
+        questionRepository.save(question);
         return answerRepository.save(answer);
     }
 
