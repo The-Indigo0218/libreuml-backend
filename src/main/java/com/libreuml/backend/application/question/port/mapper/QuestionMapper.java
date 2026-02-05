@@ -20,8 +20,10 @@ public interface QuestionMapper {
     Question toDomain(CreateQuestionCommand command);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "creatorId", ignore = true)
     void updateFromCommand(UpdateTitleAndContentCommand command, @MappingTarget Question question);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "creatorId", ignore = true)
     void updateFromCommand(UpdateSolvedStatusCommand command, @MappingTarget Question question);
 }
