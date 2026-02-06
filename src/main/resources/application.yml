@@ -21,5 +21,11 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-      secret: ${JWT_SECRET:default_super_secure_secret_key_for_local_development_must_be_at_least_512_bits_long_for_hs512}
+      secret: ${JWT_SECRET}
       expiration: 86400000
+
+
+app:
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
