@@ -4,4 +4,6 @@ import com.libreuml.backend.domain.model.User;
 
 public interface TokenProviderPort {
     String generateToken(User user);
+    boolean validateToken(String token);
+    String getEmailFromToken(String token);
 }
