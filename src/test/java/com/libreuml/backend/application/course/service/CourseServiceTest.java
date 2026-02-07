@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,7 +39,6 @@ class CourseServiceTest {
     @Test
     @DisplayName("Should create course successfully when user is Teacher and code is unique")
     void createCourse_Success() {
-        // 1. GIVEN
         UUID teacherId = UUID.randomUUID();
 
         User teacher = Teacher.builder()
@@ -51,7 +51,8 @@ class CourseServiceTest {
                 "Intro description",
                 teacherId,
                 VisibilityCourseEnum.PUBLIC,
-                "JAVA-101"
+                "JAVA-101",
+                List.of()
         );
 
         Course expectedCourse = Course.builder()
@@ -59,16 +60,13 @@ class CourseServiceTest {
                 .creatorId(teacherId)
                 .build();
 
-        // Mocks behavior
         when(userRepository.getUserById(teacherId)).thenReturn(Optional.of(teacher));
         when(courseRepository.existsByCode("JAVA-101")).thenReturn(false);
         when(courseMapper.toDomain(command)).thenReturn(expectedCourse);
         when(courseRepository.save(any(Course.class))).thenReturn(expectedCourse);
 
-        // 2. WHEN
         Course result = courseService.createCourse(command);
 
-        // 3. THEN
         assertNotNull(result);
         assertEquals("JAVA-101", result.getCode());
         verify(courseRepository).save(any(Course.class));
@@ -77,7 +75,6 @@ class CourseServiceTest {
     @Test
     @DisplayName("Should throw exception when Student tries to create course")
     void createCourse_Fail_Student() {
-        // 1. GIVEN
         UUID studentId = UUID.randomUUID();
 
         User student = Student.builder()
@@ -90,12 +87,12 @@ class CourseServiceTest {
                 "Intro description",
                 studentId,
                 VisibilityCourseEnum.PUBLIC,
-                "JAVA-101"
+                "JAVA-101",
+                List.of()
         );
 
         when(userRepository.getUserById(studentId)).thenReturn(Optional.of(student));
 
-        // 2. WHEN & THEN
         assertThrows(UserNotAuthorizedException.class, () -> {
             courseService.createCourse(command);
         });
