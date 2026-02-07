@@ -1,9 +1,6 @@
 package com.libreuml.backend.application.courses.port.mapper;
 
-import com.libreuml.backend.application.courses.port.in.dto.CreateCourseCommand;
-import com.libreuml.backend.application.courses.port.in.dto.UpdateCourseVisibilityCommand;
-import com.libreuml.backend.application.courses.port.in.dto.UpdateCoverUrlCourseCommand;
-import com.libreuml.backend.application.courses.port.in.dto.UpdateTitleAndDescriptionCourseCommand;
+import com.libreuml.backend.application.courses.port.in.dto.*;
 import com.libreuml.backend.domain.model.Course;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,6 +16,7 @@ public interface CourseMapper {
     @Mapping(target = "coverUrl", source = "coverUrl")
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "visibility", source = "visibility")
+    @Mapping(target = "tags", source = "tags")
     Course toDomain(CreateCourseCommand command);
 
     @Mapping(target = "id", ignore = true)
@@ -35,4 +33,5 @@ public interface CourseMapper {
     @Mapping(target = "creatorId", ignore = true)
     void updateVisibilityFromCommand(UpdateCourseVisibilityCommand command, @MappingTarget Course course);
 
+    void  updateTagsFromCommand(UpdateCourseTagsCommand command, @MappingTarget Course course);
 }

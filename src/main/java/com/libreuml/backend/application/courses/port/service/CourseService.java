@@ -16,6 +16,7 @@ import com.libreuml.backend.domain.model.RoleEnum;
 import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -29,17 +30,20 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
 
 
     @Override
+    @Transactional
     public Course createCourse(CreateCourseCommand command) {
-        User user = getUserOrThrow(command.creatorId());
-
-        if (!user.getRole().equals(RoleEnum.TEACHER) && !user.getRole().equals(RoleEnum.ADMIN)) {
-            throw new UserNotAuthorizedException("Only Teachers and Admins can create courses.");
+        if (command.tags().size() > 5) {
+            throw new IllegalArgumentException("A course cannot have more than 5 tags.");
         }
-
+        User user = getUserOrThrow(command.creatorId());
+        if (user.getRole() == RoleEnum.STUDENT) {
+            throw new UserNotAuthorizedException("You are not authorized to create a course.");
+        }
         if (courseRepository.existsByCode(command.code())) {
             throw new CourseAlreadyExistsException("Course with code " + command.code() + " already exists.");
         }
         Course course = courseMapper.toDomain(command);
+        course.assignSlug(generateUniqueSlug(command.title()));
         return courseRepository.save(course);
     }
 
@@ -50,7 +54,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
 
     @Override
     public PagedResult<Course> getAllCoursesByCreatorId(GetCoursesByCreatorIdCommand command) {
-         getUserOrThrow(command.creatorId());
+        getUserOrThrow(command.creatorId());
         return courseRepository.findAllByCreatorId(command.creatorId(), command.paginationCommand());
     }
 
@@ -72,6 +76,16 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     @Override
     public PagedResult<Course> searchCursesByTitle(SearchCoursesByTitleCommand command) {
         return courseRepository.searchByTitle(command.title(), command.paginationCommand());
+    }
+
+    @Override
+    public PagedResult<Course> getCoursesByTag(GetCourseByTag command) {
+        return courseRepository.findByTag(command.tag(), command.paginationCommand());
+    }
+
+    @Override
+    public Course getCourseBySlug(String slug) {
+        return courseRepository.findBySlug(slug).orElseThrow(() -> new CourseNotFoundException("Course with slug " + slug + " not found."));
     }
 
     @Override
@@ -109,13 +123,21 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
         return courseRepository.save(course);
     }
 
+    @Override
+    public Course updateTags(UpdateCourseTagsCommand command) {
+        Course course = getCourseOrThrow(command.courseId());
+        verifyCourseCreator(course, command.userId());
+        courseMapper.updateTagsFromCommand(command, course);
+        return courseRepository.save(course);
+    }
+
     private Course getCourseOrThrow(UUID courseId) {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course with id " + courseId + " not found."));
     }
 
     private User getUserOrThrow(UUID userId) {
-      return userRepository.getUserById(userId).orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
+        return userRepository.getUserById(userId).orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
     }
 
     private void verifyCourseCreator(Course course, UUID userId) {
@@ -123,4 +145,21 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
             throw new UserNotAuthorizedException("User is not authorized to perform this action.");
         }
     }
+
+    private String generateUniqueSlug(String title) {
+        String baseSlug = title.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-");
+
+        String finalSlug = baseSlug;
+        int counter = 1;
+
+        while (courseRepository.existsBySlug(finalSlug)) {
+            finalSlug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return finalSlug;
+    }
+
 }

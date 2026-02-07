@@ -21,4 +21,10 @@ public interface CourseRepository {
 
     long countAll();
     long countAllPublic();
+
+    PagedResult<Course> findByTag(String tag, PaginationCommand pagination);
+
+    boolean existsBySlug(String slug);
+
+    Optional<Course> findBySlug(String slug);
 }
