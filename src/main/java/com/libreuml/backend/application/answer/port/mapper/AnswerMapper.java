@@ -15,7 +15,7 @@ public interface AnswerMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "creatorId", source = "creatorId")
-    @Mapping(target = "imageUrls", source = "imageUrls", defaultValue = "java.util.Collections.emptyList()")
+    @Mapping(target = "imageUrls", ignore = true)
     @Mapping(target = "questionId", source = "questionId")
     Answer toDomain(CreateAnswerCommand command);
 

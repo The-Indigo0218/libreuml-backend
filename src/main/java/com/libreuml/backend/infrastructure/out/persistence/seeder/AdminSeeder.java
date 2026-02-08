@@ -12,7 +12,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -38,13 +37,15 @@ public class AdminSeeder implements CommandLineRunner {
         log.info("🚀 Seeding Admin User from Environment Variables...");
 
         User admin = Developer.builder()
-                .id(UUID.randomUUID())
                 .email(adminEmail)
                 .password(passwordEncoder.encode(adminPassword))
                 .fullName("System Administrator")
                 .role(RoleEnum.ADMIN)
                 .active(true)
                 .joinedAt(LocalDate.now())
+                .academicDegrees(java.util.Collections.emptyList())
+                .stacks(java.util.Collections.emptyList())
+                .organization(java.util.Collections.emptyList())
                 .build();
 
         userRepository.save(admin);

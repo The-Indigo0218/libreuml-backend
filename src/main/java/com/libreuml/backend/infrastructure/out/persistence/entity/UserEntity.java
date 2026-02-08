@@ -1,10 +1,11 @@
 package com.libreuml.backend.infrastructure.out.persistence.entity;
 
 import com.libreuml.backend.domain.model.RoleEnum;
-import com.libreuml.backend.infrastructure.out.persistence.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -47,15 +49,15 @@ public class UserEntity {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @Convert(converter = StringListConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<String> academicDegrees;
 
-    @Convert(converter = StringListConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<String> organization;
 
-    @Convert(converter = StringListConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<String> stacks;
 

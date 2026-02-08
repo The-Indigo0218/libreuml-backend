@@ -89,7 +89,8 @@ public class UserPersistenceAdapter implements UserRepository {
                 page.getNumber(),
                 page.getSize(),
                 page.getTotalElements(),
-                page.getTotalPages()
+                page.getTotalPages(),
+                page.isLast()
         );
     }
 }
