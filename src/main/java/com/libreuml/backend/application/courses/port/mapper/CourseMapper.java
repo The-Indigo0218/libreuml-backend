@@ -13,7 +13,7 @@ public interface CourseMapper {
     @Mapping(target = "code", source = "code")
     @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "coverUrl", source = "coverUrl")
+    @Mapping(target = "coverUrl", ignore = true)
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "visibility", source = "visibility")
     @Mapping(target = "tags", source = "tags")

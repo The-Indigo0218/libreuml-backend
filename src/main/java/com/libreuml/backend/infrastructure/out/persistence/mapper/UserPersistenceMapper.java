@@ -3,18 +3,21 @@ package com.libreuml.backend.infrastructure.out.persistence.mapper;
 import com.libreuml.backend.domain.model.*;
 import com.libreuml.backend.infrastructure.out.persistence.entity.*;
 import org.mapstruct.Mapper;
-import org.mapstruct.SubclassMapping;
+import org.mapstruct.Builder;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
 public interface UserPersistenceMapper {
 
+    // --- Domain to Entity (Already working) ---
     default UserEntity toEntity(User user) {
+        if (user == null) {
+            return null;
+        }
         return switch (user) {
-            case null -> null;
             case Student student -> toStudentEntity(student);
             case Teacher teacher -> toTeacherEntity(teacher);
             case Developer developer -> toDeveloperEntity(developer);
-            default -> throw new IllegalArgumentException("unknow user type: " + user.getClass().getName());
+            default -> throw new IllegalArgumentException("Unknown user type: " + user.getClass().getName());
         };
     }
 
@@ -22,15 +25,25 @@ public interface UserPersistenceMapper {
     TeacherEntity toTeacherEntity(Teacher teacher);
     DeveloperEntity toDeveloperEntity(Developer developer);
 
-    @SubclassMapping(source = StudentEntity.class, target = Student.class)
-    @SubclassMapping(source = TeacherEntity.class, target = Teacher.class)
-    @SubclassMapping(source = DeveloperEntity.class, target = Developer.class)
-    User toDomain(UserEntity entity);
+    // --- Entity to Domain (FIXED) ---
+    // We removed @SubclassMapping and use a manual Java 21 switch instead.
+    default User toDomain(UserEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return switch (entity) {
+            case StudentEntity s -> toStudentDomain(s);
+            case TeacherEntity t -> toTeacherDomain(t);
+            case DeveloperEntity d -> toDeveloperDomain(d);
+            default -> throw new IllegalArgumentException("Unknown entity type: " + entity.getClass().getName());
+        };
+    }
 
     Student toStudentDomain(StudentEntity entity);
     Teacher toTeacherDomain(TeacherEntity entity);
     Developer toDeveloperDomain(DeveloperEntity entity);
 
+    // --- Helpers ---
     SocialProfileEmbeddable toEmbeddable(SocialProfile profile);
     SocialProfile toSocialDomain(SocialProfileEmbeddable embeddable);
 }

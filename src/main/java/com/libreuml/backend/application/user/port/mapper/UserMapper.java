@@ -17,7 +17,7 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "socialProfile.githubUrl", source = "githubUrl")
     @Mapping(target = "socialProfile.instagramUrl", source = "instagramUrl")
-    @Mapping(target = "socialProfile.xUrl", source = "xUrl")
+    @Mapping(target = "socialProfile.XUrl", source = "xUrl")
     @Mapping(target = "socialProfile.linkedinUrl", source = "linkedinUrl")
     @Mapping(target = "socialProfile.webSiteUrl", source = "webSiteUrl")
     void updateSocialProfileFromCommand(UpdateSocialProfileCommand command, @MappingTarget User user);
