@@ -11,4 +11,8 @@ public interface ResourceRepository {
     Resource save(Resource resource);
     Optional<Resource> findById(UUID id);
     PagedResult<Resource> findAllByCreatorId(UUID creatorId, PaginationCommand pagination);
+    PagedResult<Resource> findAllByTitleContaining(String title, PaginationCommand pagination);
+    PagedResult<Resource> findAllByTagsContaining(String tag, PaginationCommand pagination);
+    Long countByTagsContaining(String tag);
+    Long totalActiveResources();
 }

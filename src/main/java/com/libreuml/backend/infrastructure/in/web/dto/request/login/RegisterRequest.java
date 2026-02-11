@@ -1,4 +1,4 @@
-package com.libreuml.backend.infrastructure.in.web.dto;
+package com.libreuml.backend.infrastructure.in.web.dto.request.login;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

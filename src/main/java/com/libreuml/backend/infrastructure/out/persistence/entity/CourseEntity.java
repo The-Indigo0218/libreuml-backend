@@ -59,7 +59,6 @@ public class CourseEntity {
     @Builder.Default
     private List<CourseResourceEntity> resources = new ArrayList<>();
 
-    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

@@ -1,4 +1,4 @@
-package com.libreuml.backend.infrastructure.out.persistence.mapper;
+package com.libreuml.backend.infrastructure.out.persistence.adapter;
 
 import com.libreuml.backend.application.answer.port.out.AnswerRepository;
 import com.libreuml.backend.application.common.PagedResult;

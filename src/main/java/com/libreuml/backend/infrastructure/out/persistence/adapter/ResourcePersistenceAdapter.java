@@ -36,4 +36,24 @@ public class ResourcePersistenceAdapter implements ResourceRepository {
     public PagedResult<Resource> findAllByCreatorId(UUID creatorId, PaginationCommand pagination) {
         return null;
     }
+
+    @Override
+    public PagedResult<Resource> findAllByTitleContaining(String title, PaginationCommand pagination) {
+        return null;
+    }
+
+    @Override
+    public PagedResult<Resource> findAllByTagsContaining(String tag, PaginationCommand pagination) {
+        return null;
+    }
+
+    @Override
+    public Long countByTagsContaining(String tag) {
+        return 0L;
+    }
+
+    @Override
+    public Long totalActiveResources() {
+        return 0L;
+    }
 }

@@ -2,9 +2,9 @@ package com.libreuml.backend.infrastructure.in.web.controller;
 
 import com.libreuml.backend.application.user.port.in.CreateUserUseCase;
 import com.libreuml.backend.application.user.port.in.LoginUseCase;
-import com.libreuml.backend.infrastructure.in.web.dto.AuthResponse;
-import com.libreuml.backend.infrastructure.in.web.dto.LoginRequest;
-import com.libreuml.backend.infrastructure.in.web.dto.RegisterRequest;
+import com.libreuml.backend.infrastructure.in.web.dto.response.auth.AuthResponse;
+import com.libreuml.backend.infrastructure.in.web.dto.request.login.LoginRequest;
+import com.libreuml.backend.infrastructure.in.web.dto.request.login.RegisterRequest;
 import com.libreuml.backend.infrastructure.in.web.mapper.AuthWebMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
