@@ -8,7 +8,6 @@ import org.mapstruct.Builder;
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
 public interface UserPersistenceMapper {
 
-    // --- Domain to Entity (Already working) ---
     default UserEntity toEntity(User user) {
         if (user == null) {
             return null;
@@ -25,9 +24,7 @@ public interface UserPersistenceMapper {
     TeacherEntity toTeacherEntity(Teacher teacher);
     DeveloperEntity toDeveloperEntity(Developer developer);
 
-    // --- Entity to Domain (FIXED) ---
-    // We removed @SubclassMapping and use a manual Java 21 switch instead.
-    default User toDomain(UserEntity entity) {
+  default User toDomain(UserEntity entity) {
         if (entity == null) {
             return null;
         }
