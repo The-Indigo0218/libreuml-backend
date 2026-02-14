@@ -25,9 +25,10 @@ public interface ResourceWebMapper {
     CreateResourceCommand toCreateResourceCommand(CreateResourceRequest request, UUID creatorId);
 
     @Named("ValidateResourceType")
-    default void validateResourceType(String type) {
+    default ResourceType validateResourceType(String type) {
         try {
-            ResourceType resourceType = ResourceType.valueOf(type.toUpperCase());
+            return ResourceType.valueOf(type.toUpperCase());
+
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid Resource Type. Allowed: DOCUMENT, VIDEO, LINK");
         }
