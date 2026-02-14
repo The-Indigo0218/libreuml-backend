@@ -13,11 +13,12 @@ import com.libreuml.backend.infrastructure.in.web.dto.response.resource.Resource
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 import java.util.UUID;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ResourceWebMapper {
 
     @Mapping(target = "type", source = "request.type", qualifiedByName = "ValidateResourceType")
@@ -53,11 +54,11 @@ public interface ResourceWebMapper {
         );
     }
 
-    @Mapping(target = "resourceId", source = "resourceId")
-    @Mapping(target = "userId", source = "userId")
-    UpdateTitleAndContentResourceCommand toUpdateTitleAndContentResourceCommand(UpdateTitleAndContentRequest request, UUID resourceId, UUID userId);
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "creatorId", source = "creatorId")
+    UpdateTitleAndContentResourceCommand toUpdateTitleAndContentResourceCommand(UpdateTitleAndContentRequest request, UUID id, UUID creatorId);
 
-    @Mapping(target = "resourceId", source = "resourceId")
-    @Mapping(target = "userId", source = "userId")
-    UpdateTagsResourceCommand toUpdateTagsCommand(UpdateTagsRequest request, UUID resourceId, UUID userId);
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "creatorId", source = "creatorId")
+    UpdateTagsResourceCommand toUpdateTagsCommand(UpdateTagsRequest request, UUID id, UUID creatorId);
 }

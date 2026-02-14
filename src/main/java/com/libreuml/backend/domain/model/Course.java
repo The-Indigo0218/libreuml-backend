@@ -31,6 +31,7 @@ public class Course {
             throw new UserNotAuthorizedException("User is not authorized to deactivate this course");
         }
         this.active = false;
+        this.visibility = VisibilityCourseEnum.PRIVATE;
     }
 
     private boolean canDeactivate(User user) {

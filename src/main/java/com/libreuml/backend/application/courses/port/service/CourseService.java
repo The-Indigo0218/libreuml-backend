@@ -90,27 +90,27 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
 
     @Override
     public Course updateTitleAndDescription(UpdateTitleAndDescriptionCourseCommand command) {
-        getUserOrThrow(command.userId());
+        getUserOrThrow(command.creatorId());
         Course course = getCourseOrThrow(command.id());
-        verifyCourseCreator(course, command.userId());
+        verifyCourseCreator(course, command.creatorId());
         courseMapper.updateTitleAndDescriptionFromCommand(command, course);
         return courseRepository.save(course);
     }
 
     @Override
     public Course updateCoverUrl(UpdateCoverUrlCourseCommand command) {
-        getUserOrThrow(command.userId());
+        getUserOrThrow(command.creatorId());
         Course course = getCourseOrThrow(command.id());
-        verifyCourseCreator(course, command.userId());
+        verifyCourseCreator(course, command.creatorId());
         courseMapper.updateCoverUrlFromCommand(command, course);
         return courseRepository.save(course);
     }
 
     @Override
     public Course updateVisibility(UpdateCourseVisibilityCommand command) {
-        getUserOrThrow(command.userId());
+        getUserOrThrow(command.creatorId());
         Course course = getCourseOrThrow(command.id());
-        verifyCourseCreator(course, command.userId());
+        verifyCourseCreator(course, command.creatorId());
         courseMapper.updateVisibilityFromCommand(command, course);
         return courseRepository.save(course);
     }
@@ -126,7 +126,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     @Override
     public Course updateTags(UpdateCourseTagsCommand command) {
         Course course = getCourseOrThrow(command.id());
-        verifyCourseCreator(course, command.userId());
+        verifyCourseCreator(course, command.creatorId());
         courseMapper.updateTagsFromCommand(command, course);
         return courseRepository.save(course);
     }
