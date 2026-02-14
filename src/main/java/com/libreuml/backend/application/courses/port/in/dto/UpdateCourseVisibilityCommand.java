@@ -4,5 +4,5 @@ import com.libreuml.backend.domain.model.VisibilityCourseEnum;
 
 import java.util.UUID;
 
-public record UpdateCourseVisibilityCommand(UUID courseId, UUID userId, VisibilityCourseEnum visibility) {
+public record UpdateCourseVisibilityCommand(UUID id, UUID userId, VisibilityCourseEnum visibility) {
 }

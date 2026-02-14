@@ -91,7 +91,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     @Override
     public Course updateTitleAndDescription(UpdateTitleAndDescriptionCourseCommand command) {
         getUserOrThrow(command.userId());
-        Course course = getCourseOrThrow(command.courseId());
+        Course course = getCourseOrThrow(command.id());
         verifyCourseCreator(course, command.userId());
         courseMapper.updateTitleAndDescriptionFromCommand(command, course);
         return courseRepository.save(course);
@@ -100,7 +100,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     @Override
     public Course updateCoverUrl(UpdateCoverUrlCourseCommand command) {
         getUserOrThrow(command.userId());
-        Course course = getCourseOrThrow(command.courseId());
+        Course course = getCourseOrThrow(command.id());
         verifyCourseCreator(course, command.userId());
         courseMapper.updateCoverUrlFromCommand(command, course);
         return courseRepository.save(course);
@@ -109,7 +109,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     @Override
     public Course updateVisibility(UpdateCourseVisibilityCommand command) {
         getUserOrThrow(command.userId());
-        Course course = getCourseOrThrow(command.courseId());
+        Course course = getCourseOrThrow(command.id());
         verifyCourseCreator(course, command.userId());
         courseMapper.updateVisibilityFromCommand(command, course);
         return courseRepository.save(course);
@@ -117,7 +117,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
 
     @Override
     public Course deactivateCourse(DeactivateCourseCommand command) {
-        Course course = getCourseOrThrow(command.courseId());
+        Course course = getCourseOrThrow(command.id());
         User user = getUserOrThrow(command.userId());
         course.deactivate(user);
         return courseRepository.save(course);
@@ -125,7 +125,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
 
     @Override
     public Course updateTags(UpdateCourseTagsCommand command) {
-        Course course = getCourseOrThrow(command.courseId());
+        Course course = getCourseOrThrow(command.id());
         verifyCourseCreator(course, command.userId());
         courseMapper.updateTagsFromCommand(command, course);
         return courseRepository.save(course);
