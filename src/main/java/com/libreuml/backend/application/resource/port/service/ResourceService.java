@@ -36,7 +36,7 @@ public class ResourceService implements CreateResourceUseCase, UpdateResourceUse
 
     @Override
     public Resource getResourceById(GetResourceByIdCommand command) {
-        return getResourceOrThrow(command.resourceId());
+        return getResourceOrThrow(command.id());
     }
 
     @Override
@@ -66,15 +66,15 @@ public class ResourceService implements CreateResourceUseCase, UpdateResourceUse
 
     @Override
     public Resource updateTitleAndContent(UpdateTitleAndContentResourceCommand command) {
-        Resource resource = getResourceOrThrow(command.resourceId());
-        verifyUserIsCreator(getUserOrThrow(command.userId()), resource);
+        Resource resource = getResourceOrThrow(command.id());
+        verifyUserIsCreator(getUserOrThrow(command.creatorId()), resource);
         resourceMapper.updateTitleAndContentFromCommand(command, resource);
         return resourceRepository.save(resource);
     }
 
     @Override
     public Resource deactivateResource(DeactivateResourceCommand command) {
-        Resource resource = getResourceOrThrow(command.resourceId());
+        Resource resource = getResourceOrThrow(command.id());
         verifyUserIsCreator(getUserOrThrow(command.userId()), resource);
         resource.deactivate();
         return resourceRepository.save(resource);
@@ -82,18 +82,18 @@ public class ResourceService implements CreateResourceUseCase, UpdateResourceUse
 
     @Override
     public Resource updateResourceTags(UpdateTagsResourceCommand command) {
-        Resource resource = getResourceOrThrow(command.resourceId());
-        verifyUserIsCreator(getUserOrThrow(command.userId()), resource);
+        Resource resource = getResourceOrThrow(command.id());
+        verifyUserIsCreator(getUserOrThrow(command.creatorId()), resource);
         resourceMapper.updateTagsFromCommand(command, resource);
         return resourceRepository.save(resource);
     }
 
-    private User getUserOrThrow(UUID userId) {
-        return userRepository.getUserById(userId).orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
+    private User getUserOrThrow(UUID creatorId) {
+        return userRepository.getUserById(creatorId).orElseThrow(() -> new UserNotFoundException("User with id " + creatorId + " not found"));
     }
 
-    private Resource getResourceOrThrow(UUID resourceId) {
-        return resourceRepository.findById(resourceId).orElseThrow(() -> new ResourceNotFoundException("Resource with id " + resourceId + " not found"));
+    private Resource getResourceOrThrow(UUID id) {
+        return resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resource with id " + id + " not found"));
     }
 
     private void verifyUserIsCreator(User user, Resource resource) {

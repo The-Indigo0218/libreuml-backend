@@ -4,9 +4,7 @@ import com.libreuml.backend.application.resource.port.in.dto.CreateResourceComma
 import com.libreuml.backend.application.resource.port.in.dto.UpdateTagsResourceCommand;
 import com.libreuml.backend.application.resource.port.in.dto.UpdateTitleAndContentResourceCommand;
 import com.libreuml.backend.domain.model.Resource;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface ResourceMapper {
@@ -17,9 +15,12 @@ public interface ResourceMapper {
     @Mapping(target = "creatorId", source = "creatorId")
     Resource toResource(CreateResourceCommand command);
 
-
+    @Mapping(target = "id", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateTagsFromCommand(UpdateTagsResourceCommand command, @MappingTarget Resource resource);
 
+    @Mapping(target = "id", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateTitleAndContentFromCommand(UpdateTitleAndContentResourceCommand command, @MappingTarget Resource resource);
 
 }
