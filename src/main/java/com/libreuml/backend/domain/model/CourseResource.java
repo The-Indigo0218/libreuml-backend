@@ -3,8 +3,9 @@ package com.libreuml.backend.domain.model;
 import java.util.UUID;
 
 public class CourseResource {
+    private UUID id;
     private UUID courseId;
-    private Resource resource;
-    private Integer order;
+    private UUID resourceId;
+    private Integer position;
     private Boolean visible;
 }
