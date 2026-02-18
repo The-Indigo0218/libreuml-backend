@@ -38,5 +38,5 @@ public class CourseResourceEntity {
 
     @CreationTimestamp
     @Column(name = "added_at", updatable = false)
-    private LocalDateTime addedAt;
+    private LocalDateTime createdAt;
 }
