@@ -5,16 +5,19 @@ meta {
 }
 
 post {
-  url: '''
-    {
-      "email": "teacher@libreuml.com",
-      "password": "SecurePassword123!"
-    http://localhost:8080/api/v1/auth/login
-'''
-  body: none
+  url: http://localhost:8080/api/v1/auth/login
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "email": "teacher@libreuml.com",
+    "password": "SecurePassword123!"
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

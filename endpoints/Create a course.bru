@@ -1,0 +1,31 @@
+meta {
+  name: Create a course
+  type: http
+  seq: 12
+}
+
+post {
+  url: http://localhost:8080/api/v1/courses
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiVEVBQ0hFUiIsImlkIjoiOTFkYWQwOGYtYjY3MC00NDgzLWE4ZGQtYWIwODkwNTdhNzgwIiwic3ViIjoidGVhY2hlckBsaWJyZXVtbC5jb20iLCJpYXQiOjE3NzE0NDcxNTMsImV4cCI6MTc3MTUzMzU1M30.wZWbHlX8VWdd0zuqmq8Qp0njmpdFtN17YiPeyWEcZmwsaoUFVz6FzWiTZ76K9OSmUIHeJElgVTV6iLcu5tSbCQ
+}
+
+body:json {
+  {
+    "title": "Mastering Spring Boot 3",
+    "description": "A complete guide to backend development.",
+    "coverUrl": "https://libreuml.com/images/spring.png",
+    "visibility": "PRIVATE",
+    "tags": ["Java", "Backend"], 
+    "code": "Spring-01"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

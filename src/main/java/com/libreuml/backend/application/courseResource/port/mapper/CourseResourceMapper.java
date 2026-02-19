@@ -10,7 +10,7 @@ public interface CourseResourceMapper {
     @Mapping(target = "courseId", source = "courseId")
     @Mapping(target = "resourceId", source = "resourceId")
     @Mapping(target = "position", source = "position")
-    @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
+    @Mapping(target = "id", ignore = true, expression = "java(java.util.UUID.randomUUID())")
     @Mapping(target = "visible", constant = "true")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     CourseResource toCourseResource(CreateCourseResourceCommand command);
