@@ -70,7 +70,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CourseResponse> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(courseWebMapper.toCourseResponse(courseService.getCourseById(id)));
+    public ResponseEntity<CourseResponse> getById(@PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(courseWebMapper.toCourseResponse(courseService.getCourseById(id, userDetails.getId())));
     }
 }

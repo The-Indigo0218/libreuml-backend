@@ -1,0 +1,28 @@
+meta {
+  name: Create a resource
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/api/v1/resources
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiVEVBQ0hFUiIsImlkIjoiOTFkYWQwOGYtYjY3MC00NDgzLWE4ZGQtYWIwODkwNTdhNzgwIiwic3ViIjoidGVhY2hlckBsaWJyZXVtbC5jb20iLCJpYXQiOjE3NzE0NDcxNTMsImV4cCI6MTc3MTUzMzU1M30.wZWbHlX8VWdd0zuqmq8Qp0njmpdFtN17YiPeyWEcZmwsaoUFVz6FzWiTZ76K9OSmUIHeJElgVTV6iLcu5tSbCQ
+}
+
+body:json {
+  {
+    "title": "Intro to Hexagonal Architecture",
+    "type": "VIDEO",
+    "content": "https://youtube.com/watch?v=example"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

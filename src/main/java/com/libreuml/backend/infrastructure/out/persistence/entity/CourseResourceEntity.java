@@ -36,7 +36,6 @@ public class CourseResourceEntity {
     @Builder.Default
     private Boolean visible = true;
 
-    @CreationTimestamp
-    @Column(name = "added_at", updatable = false)
+   @Column(name = "added_at", updatable = false)
     private LocalDateTime createdAt;
 }

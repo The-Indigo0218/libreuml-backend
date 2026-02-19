@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface GetCourseUseCase {
 
-    Course getCourseById(UUID courseId);
+    Course getCourseById(UUID courseId, UUID userId);
 
     PagedResult<Course> getAllCoursesByCreatorId(GetCoursesByCreatorIdCommand command);
 

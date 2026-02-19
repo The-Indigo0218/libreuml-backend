@@ -8,12 +8,11 @@ import com.libreuml.backend.application.courses.port.in.*;
 import com.libreuml.backend.application.courses.port.in.dto.*;
 import com.libreuml.backend.application.courses.port.mapper.CourseMapper;
 import com.libreuml.backend.application.courses.port.out.CourseRepository;
+import com.libreuml.backend.application.enrollment.port.out.EnrollmentRepository;
 import com.libreuml.backend.application.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
-import com.libreuml.backend.domain.model.Course;
-import com.libreuml.backend.domain.model.RoleEnum;
-import com.libreuml.backend.domain.model.User;
+import com.libreuml.backend.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +26,7 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final CourseMapper courseMapper;
+    private final EnrollmentRepository enrollmentRepository;
 
 
     @Override
@@ -48,8 +48,12 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
     }
 
     @Override
-    public Course getCourseById(UUID courseId) {
-        return getCourseOrThrow(courseId);
+    public Course getCourseById(UUID courseId, UUID userId) {
+        Course course = getCourseOrThrow(courseId);
+        if (course.getVisibility().equals(VisibilityCourseEnum.PRIVATE)){
+            verifyCourseMember(course, userId);
+        }
+        return course;
     }
 
     @Override
@@ -160,6 +164,12 @@ public class CourseService implements CreateCourseUseCase, GetCourseUseCase, Upd
         }
 
         return finalSlug;
+    }
+
+    private void verifyCourseMember(Course course, UUID userId) {
+        if (!course.getCreatorId().equals(userId) && !enrollmentRepository.existsByStudentIdAndCourseId(userId, course.getId())) {
+            throw new UserNotAuthorizedException("User is not authorized to perform this action.");
+        }
     }
 
 }

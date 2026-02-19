@@ -22,7 +22,7 @@ public interface AuthWebMapper {
     default RoleEnum mapAndValidateRole(String roleStr) {
         try {
             RoleEnum role = RoleEnum.valueOf(roleStr.toUpperCase());
-            if (role == RoleEnum.ADMIN || role == RoleEnum.MODERATOR || role == RoleEnum.DEVELOPER) {
+            if (role == RoleEnum.ADMIN || role == RoleEnum.MODERATOR) {
                 throw new SecurityException("Access Denied: Cannot register with elevated privileges via public API.");
             }
             return role;

@@ -20,6 +20,7 @@ import com.libreuml.backend.domain.model.Course;
 import com.libreuml.backend.domain.model.CourseResource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -33,6 +34,7 @@ public class CourseResourceService implements CreateCurseResourceUseCase, Update
     private final CourseResourceMapper courseResourceMapper;
 
     @Override
+    @Transactional
     public CourseResource create(CreateCourseResourceCommand command) {
         verifyOwnership(command.courseId(), command.userId());
         findCourseOrThrow(command.courseId());
