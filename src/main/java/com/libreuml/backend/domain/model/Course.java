@@ -1,7 +1,10 @@
 package com.libreuml.backend.domain.model;
 
+import com.libreuml.backend.application.exception.UserNotAuthorizedException;
 import lombok.*;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Setter
@@ -12,9 +15,30 @@ import java.util.UUID;
 public class Course {
     private UUID id;
     private String code;
-    private String name;
+    private String title;
     private String description;
-
-    private UUID teacherId;
+    private Boolean active;
+    private UUID creatorId;
     private LocalDateTime createdAt;
+    private LocalDateTime UpdatedAt;
+    private String coverUrl;
+    private VisibilityCourseEnum visibility;
+    private String slug;
+    private List<String> tags;
+
+    public void deactivate(User user) {
+        if (!canDeactivate(user)) {
+            throw new UserNotAuthorizedException("User is not authorized to deactivate this course");
+        }
+        this.active = false;
+        this.visibility = VisibilityCourseEnum.PRIVATE;
+    }
+
+    private boolean canDeactivate(User user) {
+        return user.getId().equals(this.creatorId) || user.getRole().equals(RoleEnum.ADMIN);
+    }
+
+    public void assignSlug(String slug) {
+        this.slug = slug;
+    }
 }

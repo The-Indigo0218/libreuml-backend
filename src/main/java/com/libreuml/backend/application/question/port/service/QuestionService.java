@@ -2,6 +2,7 @@ package com.libreuml.backend.application.question.port.service;
 
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;
+import com.libreuml.backend.application.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.question.exception.QuestionNotFoundException;
 import com.libreuml.backend.application.question.port.in.CreateQuestionUseCase;
 import com.libreuml.backend.application.question.port.in.GetQuestionUseCase;
@@ -32,12 +33,15 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
 
     @Override
     public Question create(CreateQuestionCommand command) {
+        findUserOrThrow(command.creatorId());
         return questionRepository.save(questionMapper.toDomain(command));
     }
 
     @Override
     public Question updateTitleAndContent(UpdateTitleAndContentCommand command) {
+        User user = findUserOrThrow(command.creatorId());
         Question question = findQuestionOrThrow(command.id());
+        isUserOwnerOrThrow(question, user.getId());
         questionMapper.updateFromCommand(command, question);
         return questionRepository.save(question);
     }
@@ -45,16 +49,17 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
     @Override
     public Question updateSolvedStatus(UpdateSolvedStatusCommand command) {
         Question question = findQuestionOrThrow(command.id());
+        isUserOwnerOrThrow(question, command.creatorId());
         questionMapper.updateFromCommand(command, question);
         return questionRepository.save(question);
     }
 
     @Override
     public void updateActivateStatus(UpdateActiveStatusCommand command) {
-        User user = userRepository.getUserById(command.user()).orElseThrow(() -> new UserNotFoundException("User with id " + command.user() + " not found"));
+        User user = findUserOrThrow(command.user());
         Question question = findQuestionOrThrow(command.id());
+        isUserOwnerOrThrow(question, command.user());
         question.deactivate(user);
-
         questionRepository.save(question);
     }
 
@@ -81,5 +86,15 @@ public class QuestionService implements UpdateQuestionUseCase, CreateQuestionUse
     private Question findQuestionOrThrow(UUID id) {
         return questionRepository.findById(id)
                 .orElseThrow(() -> new QuestionNotFoundException("Question with id " + id + " not found"));
+    }
+
+    private User findUserOrThrow(UUID id) {
+        return userRepository.getUserById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+    }
+
+    private void isUserOwnerOrThrow(Question question, UUID creatorId) {
+        if (!question.getCreatorId().equals(creatorId)) {
+            throw new UserNotAuthorizedException("User with id " + creatorId + " is not authorized to update this question");
+        }
     }
 }

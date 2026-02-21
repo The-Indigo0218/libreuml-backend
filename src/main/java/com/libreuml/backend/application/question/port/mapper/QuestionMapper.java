@@ -16,10 +16,14 @@ public interface QuestionMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "creatorId", source = "creatorId")
-    @Mapping(target = "imageUrls", source = "imageUrls", defaultValue = "java.util.Collections.emptyList()")
+    @Mapping(target = "imageUrls", ignore = true)
     Question toDomain(CreateQuestionCommand command);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "creatorId", ignore = true)
     void updateFromCommand(UpdateTitleAndContentCommand command, @MappingTarget Question question);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "creatorId", ignore = true)
     void updateFromCommand(UpdateSolvedStatusCommand command, @MappingTarget Question question);
 }

@@ -7,5 +7,6 @@ public record PagedResult<T>(
         int pageNumber,
         int pageSize,
         long totalElements,
-        int totalPages
+        int totalPages,
+        boolean isLast
 ) {}

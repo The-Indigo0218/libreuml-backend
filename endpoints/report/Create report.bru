@@ -1,0 +1,32 @@
+meta {
+  name: Create report
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/api/v1/reports
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiVEVBQ0hFUiIsImlkIjoiOTFkYWQwOGYtYjY3MC00NDgzLWE4ZGQtYWIwODkwNTdhNzgwIiwic3ViIjoidGVhY2hlckBsaWJyZXVtbC5jb20iLCJpYXQiOjE3NzE3MTUxMTAsImV4cCI6MTc3MTgwMTUxMH0.74u5HD3V3w1qOaRPBW4w_UngQ4z7wHdgoEhSRNob12eK2Q6nxJHSPq82Yc8t-IFZ4KHnErfAZoEC6gPv04V-6w"
+}
+
+body:json {
+  {
+    "type": "BUG",
+    "title": "Cannot access course materials",
+    "description": "When I click on the course resource, it shows a 404 error page.",
+    "evidencesImages": [
+      "https://example.com/images/error1.png",
+      "https://example.com/images/error2.png"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

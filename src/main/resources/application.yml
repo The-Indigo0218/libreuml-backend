@@ -19,3 +19,18 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+
+app:
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
