@@ -1,7 +1,7 @@
 meta {
-  name: Login User
+  name: Admin Login
   type: http
-  seq: 2
+  seq: 11
 }
 
 post {
@@ -12,9 +12,14 @@ post {
 
 body:json {
   {
-    "email": "teacher@libreuml.com",
-    "password": "SecurePassword123!"
+    "email": "{{adminEmail}}",
+     "password": "{{adminPas}}"
   }
+}
+
+vars:pre-request {
+  adminEmail: migopa0222@gmail.com
+  adminPas: root
 }
 
 settings {

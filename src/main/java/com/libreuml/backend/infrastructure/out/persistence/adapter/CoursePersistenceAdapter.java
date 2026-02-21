@@ -56,15 +56,12 @@ public class CoursePersistenceAdapter implements CourseRepository {
 
     @Override
     public long countAllPublic() {
-        // Here is your specific request! 🎯
         return courseRepository.countByVisibility(VisibilityCourseEnum.PUBLIC);
     }
 
-    // ... Implement the other pagination methods (findAllByCreatorId, etc.)
-    // using standard JpaRepository Pageable methods.
+
     @Override
     public PagedResult<Course> findAllPublicCourses(PaginationCommand pagination) {
-        // Placeholder implementation
         return null;
     }
 

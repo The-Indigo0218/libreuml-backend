@@ -1,11 +1,11 @@
 meta {
-  name: Create course-resource
+  name: Create a resource
   type: http
-  seq: 15
+  seq: 8
 }
 
 post {
-  url: http://localhost:8080/api/v1/course-resources
+  url: http://localhost:8080/api/v1/resources
   body: json
   auth: bearer
 }
@@ -16,15 +16,10 @@ auth:bearer {
 
 body:json {
   {
-    "courseId": "{{courseId}}",
-    "resourceId": "{{resourceId}}",
-    "position": 1
+    "title": "Intro to Hexagonal Architecture",
+    "type": "VIDEO",
+    "content": "https://youtube.com/watch?v=example"
   }
-}
-
-vars:pre-request {
-  courseId: 5c93c180-9bdb-4b5e-86c3-f13231671346
-  resourceId: e7598c5f-0d10-43a2-b242-a9ee5849c611
 }
 
 settings {
