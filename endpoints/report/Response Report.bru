@@ -1,0 +1,32 @@
+meta {
+  name: Response Report
+  type: http
+  seq: 18
+}
+
+patch {
+  url: http://localhost:8080/api/v1/reports/{{id}}/respond
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjoiQURNSU4iLCJpZCI6ImZmZDAwMGMxLTAzODUtNGRmYi1iZjc1LTM0MGE0N2EzNDYxZSIsInN1YiI6Im1pZ29wYTAyMjJAZ21haWwuY29tIiwiaWF0IjoxNzcxNzE2NjgwLCJleHAiOjE3NzE4MDMwODB9.SPjwYFotjHy7tJkjaID02LPmxrzfTcaVI5Vkccd_dvyG39gEnTIETsH4KQ0fW-uy5HudhPo4s5oO20w5GFVm4Q
+}
+
+body:json {
+  {
+    "adminResponse": "Thank you for reporting this. We have fixed the broken link.",
+    "internalNotes": "The resource UUID was incorrectly mapped in the DB. Updated via SQL.",
+    "status": "RESOLVED"
+  }
+}
+
+vars:pre-request {
+  id: 0cda7483-3adf-4a79-91c5-f82b72993a7f
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
