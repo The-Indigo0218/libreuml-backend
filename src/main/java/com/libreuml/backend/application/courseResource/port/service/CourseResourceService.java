@@ -13,7 +13,7 @@ import com.libreuml.backend.application.courseResource.port.mapper.CourseResourc
 import com.libreuml.backend.application.courseResource.port.out.CourseResourceRepository;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.application.courses.port.out.CourseRepository;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.resource.port.out.ResourceRepository;
 import com.libreuml.backend.domain.model.Course;

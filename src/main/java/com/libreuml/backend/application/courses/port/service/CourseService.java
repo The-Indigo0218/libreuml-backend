@@ -9,7 +9,7 @@ import com.libreuml.backend.application.courses.port.in.dto.*;
 import com.libreuml.backend.application.courses.port.mapper.CourseMapper;
 import com.libreuml.backend.application.courses.port.out.CourseRepository;
 import com.libreuml.backend.application.enrollment.port.out.EnrollmentRepository;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.*;

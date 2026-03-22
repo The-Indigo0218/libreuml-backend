@@ -1,0 +1,11 @@
+jwt:
+  secret: TGlicmVVTUxUZXN0U2VjcmV0VGhhdElzVmVyeUxvbmdBbmRTZWN1cmVBbmRDb250YWluc0F0TGVhc3Q2NEJ5dGVzT2ZEYXRhU29JdFBhc3Nlc1ZhbGlkYXRpb25FYXNpbHk=
+  expiration: 86400000
+
+app:
+  admin:
+    email: test@test.com
+    password: testPasswordHighlyInsecurePasswordForTestingOnly
+  cors:
+    allowed-origins:
+      - "http://localhost:test"

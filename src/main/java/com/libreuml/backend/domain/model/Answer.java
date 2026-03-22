@@ -1,6 +1,6 @@
 package com.libreuml.backend.domain.model;
 
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;

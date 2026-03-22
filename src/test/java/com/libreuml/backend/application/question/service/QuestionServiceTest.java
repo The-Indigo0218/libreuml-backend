@@ -12,7 +12,7 @@ import com.libreuml.backend.domain.model.Question;
 import com.libreuml.backend.domain.model.RoleEnum;
 import com.libreuml.backend.domain.model.Student;
 import com.libreuml.backend.domain.model.User;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

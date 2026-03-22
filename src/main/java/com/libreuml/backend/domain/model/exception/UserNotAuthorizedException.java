@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.exception;
+package com.libreuml.backend.domain.model.exception;
 
 public class UserNotAuthorizedException extends RuntimeException {
     public UserNotAuthorizedException(String message) {

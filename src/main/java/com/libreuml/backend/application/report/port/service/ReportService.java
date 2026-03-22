@@ -2,7 +2,7 @@ package com.libreuml.backend.application.report.port.service;
 
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.report.port.in.CreateReportUseCase;
 import com.libreuml.backend.application.report.port.in.GetReportUseCase;
 import com.libreuml.backend.application.report.port.in.UpdateReportUseCase;

@@ -8,7 +8,7 @@ import com.libreuml.backend.application.answer.port.mapper.AnswerMapper;
 import com.libreuml.backend.application.answer.port.out.AnswerRepository;
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.question.exception.QuestionNotFoundException;
 import com.libreuml.backend.application.question.port.out.QuestionRepository;
 import com.libreuml.backend.application.user.port.out.UserRepository;
