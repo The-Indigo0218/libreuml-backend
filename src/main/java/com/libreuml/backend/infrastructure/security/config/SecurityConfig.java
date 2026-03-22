@@ -3,6 +3,7 @@ package com.libreuml.backend.infrastructure.security.config;
 import com.libreuml.backend.infrastructure.security.CustomUserDetailsService;
 import com.libreuml.backend.infrastructure.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -31,6 +33,9 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
 
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private List<String> allowedOrigins;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,6 +51,15 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
+                .headers(headers -> headers
+                        .contentTypeOptions(HeadersConfigurer.ContentTypeOptionsConfig::disable)
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(63072000) // 2 years
+                        )
+                        .cacheControl(cache -> cache.disable())
+                )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -69,17 +83,13 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
-
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 }

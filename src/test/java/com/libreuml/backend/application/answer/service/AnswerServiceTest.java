@@ -9,7 +9,7 @@ import com.libreuml.backend.application.answer.port.service.AnswerService;
 import com.libreuml.backend.application.question.port.out.QuestionRepository;
 import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.*;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 
 
 import org.junit.jupiter.api.BeforeEach;

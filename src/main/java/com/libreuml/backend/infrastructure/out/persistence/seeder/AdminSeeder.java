@@ -5,6 +5,7 @@ import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Developer;
 import com.libreuml.backend.domain.model.RoleEnum;
 import com.libreuml.backend.domain.model.User;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,13 @@ public class AdminSeeder implements CommandLineRunner {
 
     @Value("${app.admin.password}")
     private String adminPassword;
+
+    @PostConstruct
+    public void checkAdminPasswordLength() {
+        if (adminPassword.length() < 20) {
+            throw new IllegalStateException("Admin password is too short after encoding. Please ensure it is at least 20 characters long.");
+        }
+    }
 
     @Override
     public void run(String... args) {

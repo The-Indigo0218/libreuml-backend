@@ -1,7 +1,7 @@
 package com.libreuml.backend.application.resource.port.service;
 
 import com.libreuml.backend.application.common.PagedResult;
-import com.libreuml.backend.application.exception.UserNotAuthorizedException;
+import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.resource.port.in.CreateResourceUseCase;
 import com.libreuml.backend.application.resource.port.in.GetResourceUseCase;

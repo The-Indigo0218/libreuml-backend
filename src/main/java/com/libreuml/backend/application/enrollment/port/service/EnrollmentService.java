@@ -1,4 +1,4 @@
-package com.libreuml.backend.application.enrollment.service;
+package com.libreuml.backend.application.enrollment.port.service;
 
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;

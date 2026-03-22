@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +18,16 @@ import java.util.Map;
 @Component
 public class JwtAdapter implements TokenProviderPort {
 
-    @Value("${jwt.secret:default_super_secure_secret_key_for_local_development_must_be_at_least_512_bits_long_for_hs512}")
-    private String secret;
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @PostConstruct
+    void validateSecret() {
+        byte[] secretBytes = java.util.Base64.getDecoder().decode(jwtSecret);
+        if (secretBytes.length < 64) {
+            throw new IllegalStateException("¡SECURITY ALERT! JWT_SECRET must have at lest 64 bytes in Base64.");
+        }
+    }
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpiration;
@@ -65,6 +74,6 @@ public class JwtAdapter implements TokenProviderPort {
     }
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 }
