@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+/docs/audit/02-critical-security-risks.md
+/docs/audit/04-seniority-and-code-quality.md
