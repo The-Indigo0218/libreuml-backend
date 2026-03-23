@@ -52,6 +52,10 @@ public class SecurityConfig {
                         // All other management endpoints (/internal/metrics, /internal/info) require auth.
                         .requestMatchers("/internal/health/**").permitAll()
                         .requestMatchers("/internal/prometheus").permitAll()
+                        // OpenAPI / Swagger UI: documentation endpoints are public (no sensitive data).
+                        // springdoc serves the UI at /api/docs and the JSON spec at /api/api-docs.
+                        .requestMatchers("/api/docs/**", "/api/docs.html").permitAll()
+                        .requestMatchers("/api/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -45,6 +45,12 @@ logging:
     org.springframework.security: WARN
     root: info
 
+springdoc:
+  swagger-ui:
+    path: /api/docs          # Swagger UI served at /api/docs
+  api-docs:
+    path: /api/api-docs      # OpenAPI JSON served at /api/api-docs
+
 management:
   endpoints:
     web:
