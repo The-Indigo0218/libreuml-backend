@@ -44,3 +44,22 @@ logging:
   level:
     org.springframework.security: WARN
     root: info
+
+management:
+  endpoints:
+    web:
+      base-path: /internal
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      # 100% sampling in development; override with a lower value in production via env var
+      probability: ${TRACING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}

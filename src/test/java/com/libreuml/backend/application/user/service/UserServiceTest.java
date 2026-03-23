@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.user.service;
 
+import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -45,6 +46,8 @@ class UserServiceTest {
     private TokenProviderPort tokenProvider;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private MetricsPort metricsPort;
 
     @InjectMocks
     private UserService userService;
