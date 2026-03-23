@@ -1,6 +1,7 @@
 package com.libreuml.backend.infrastructure.in.web.advice;
 
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
+import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
@@ -41,6 +42,14 @@ public class GlobalControllerAdvice {
         return problemDetail;
     }
 
+
+    // 400 Bad Request (OAuth errors, including invalid/expired state)
+    @ExceptionHandler(OAuthException.class)
+    public ProblemDetail handleOAuthException(OAuthException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("OAuth Error");
+        return problemDetail;
+    }
 
     // 401 Unauthorized
     @ExceptionHandler(InvalidRefreshTokenException.class)

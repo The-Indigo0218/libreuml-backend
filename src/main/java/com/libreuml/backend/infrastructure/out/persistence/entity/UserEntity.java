@@ -66,4 +66,10 @@ public class UserEntity {
 
     @Column(name = "password_version", nullable = false)
     private int passwordVersion;
+
+    @Column(name = "github_id")
+    private String githubId;
+
+    @Column(name = "google_id")
+    private String googleId;
 }
