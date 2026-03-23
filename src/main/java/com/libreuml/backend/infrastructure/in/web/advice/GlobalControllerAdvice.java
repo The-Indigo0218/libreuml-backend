@@ -3,11 +3,16 @@ package com.libreuml.backend.infrastructure.in.web.advice;
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
+import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
+import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
+import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
+import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -59,11 +64,50 @@ public class GlobalControllerAdvice {
         return problemDetail;
     }
 
+    @ExceptionHandler(DiagramNotFoundException.class)
+    public ProblemDetail handleDiagramNotFound(DiagramNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Diagram Not Found");
+        return problemDetail;
+    }
+
     // 403 Forbidden
     @ExceptionHandler(UserNotAuthorizedException.class)
     public ProblemDetail handleUserNotAuthorized(UserNotAuthorizedException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problemDetail.setTitle("User Not Authorized");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DiagramOwnershipException.class)
+    public ProblemDetail handleDiagramOwnership(DiagramOwnershipException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problemDetail.setTitle("Diagram Access Denied");
+        return problemDetail;
+    }
+
+    // 409 Conflict — optimistic locking: application-level version guard fires first; JPA @Version
+    // is the safety net for true concurrent transactions that bypass the service-layer check.
+    @ExceptionHandler(DiagramConflictException.class)
+    public ProblemDetail handleDiagramConflict(DiagramConflictException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Diagram Conflict");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "The diagram was modified by another request. Reload and retry.");
+        problemDetail.setTitle("Diagram Conflict");
+        return problemDetail;
+    }
+
+    // 422 Unprocessable Entity — payload exceeds the 5 MB domain limit
+    @ExceptionHandler(DiagramPayloadTooLargeException.class)
+    public ProblemDetail handleDiagramPayloadTooLarge(DiagramPayloadTooLargeException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problemDetail.setTitle("Diagram Payload Too Large");
         return problemDetail;
     }
 
