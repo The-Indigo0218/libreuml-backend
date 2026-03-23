@@ -9,13 +9,16 @@ import java.util.UUID;
 
 @Getter
 public class CustomUserDetails extends User {
+
     private final UUID id;
+    private final int passwordVersion;
 
     public CustomUserDetails(String username, String password, boolean enabled,
                              boolean accountNonExpired, boolean credentialsNonExpired,
                              boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities,
-                             UUID id) {
+                             UUID id, int passwordVersion) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
+        this.passwordVersion = passwordVersion;
     }
 }

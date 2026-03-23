@@ -6,4 +6,5 @@ public interface TokenProviderPort {
     String generateToken(User user);
     boolean validateToken(String token);
     String getEmailFromToken(String token);
+    int getPwdVersionFromToken(String token);
 }

@@ -1,5 +1,6 @@
 package com.libreuml.backend.infrastructure.in.web.advice;
 
+import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
@@ -40,6 +41,14 @@ public class GlobalControllerAdvice {
         return problemDetail;
     }
 
+
+    // 401 Unauthorized
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ProblemDetail handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problemDetail.setTitle("Invalid Refresh Token");
+        return problemDetail;
+    }
 
     // 403 Forbidden
     @ExceptionHandler(UserNotAuthorizedException.class)

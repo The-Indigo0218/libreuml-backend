@@ -63,4 +63,7 @@ public class UserEntity {
 
     @Embedded
     private SocialProfileEmbeddable socialProfile;
+
+    @Column(name = "password_version", nullable = false)
+    private int passwordVersion;
 }
