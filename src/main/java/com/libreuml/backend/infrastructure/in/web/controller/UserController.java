@@ -26,6 +26,11 @@ public class UserController {
     private final UserService userService;
     private final UserWebMapper userWebMapper;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(userWebMapper.toUserResponse(userService.getUserById(userDetails.getId())));
+    }
+
     @PatchMapping("/about_me")
     public ResponseEntity<UserResponse> updateUserBasicInfo(
             @RequestBody @Valid UpdateUserBasicInfoRequest request,

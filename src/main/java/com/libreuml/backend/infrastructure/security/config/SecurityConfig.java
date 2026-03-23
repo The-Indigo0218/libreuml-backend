@@ -2,6 +2,7 @@ package com.libreuml.backend.infrastructure.security.config;
 
 import com.libreuml.backend.infrastructure.security.CustomUserDetailsService;
 import com.libreuml.backend.infrastructure.security.JwtAuthenticationFilter;
+import com.libreuml.backend.infrastructure.security.JwtCookieAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,11 +14,13 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,13 +32,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtCookieAuthFilter jwtCookieAuthFilter;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private List<String> allowedOrigins;
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,20 +54,18 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider())
                 .headers(headers -> headers
-                        .contentTypeOptions(HeadersConfigurer.ContentTypeOptionsConfig::disable)
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .frameOptions(frame -> frame.deny())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
-                                .maxAgeInSeconds(63072000) // 2 years
+                                .maxAgeInSeconds(63072000)
                         )
-                        .cacheControl(cache -> cache.disable())
+                        .cacheControl(Customizer.withDefaults())
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtCookieAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    // --- CONFIGURATIONS BEANS  ---
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -80,6 +80,25 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // Both JWT filters are @Component beans, which causes Spring Boot to register them as raw
+    // servlet filters in addition to their security chain positions. Disabling the registration
+    // here prevents each filter from executing twice per request.
+    @Bean
+    public FilterRegistrationBean<JwtCookieAuthFilter> disableCookieFilterServletRegistration(
+            JwtCookieAuthFilter filter) {
+        FilterRegistrationBean<JwtCookieAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtAuthFilterServletRegistration(
+            JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -87,6 +106,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
