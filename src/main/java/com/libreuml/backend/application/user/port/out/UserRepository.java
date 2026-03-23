@@ -28,5 +28,7 @@ public interface UserRepository {
 
     int getTotalUsersCount();
 
+    Optional<User> findByGithubId(String githubId);
 
+    Optional<User> findByGoogleId(String googleId);
 }

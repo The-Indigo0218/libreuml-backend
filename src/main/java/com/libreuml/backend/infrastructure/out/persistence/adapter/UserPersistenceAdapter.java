@@ -78,6 +78,18 @@ public class UserPersistenceAdapter implements UserRepository {
         return (int) springDataUserRepository.count();
     }
 
+    @Override
+    public Optional<User> findByGithubId(String githubId) {
+        return springDataUserRepository.findByGithubId(githubId)
+                .map(userPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByGoogleId(String googleId) {
+        return springDataUserRepository.findByGoogleId(googleId)
+                .map(userPersistenceMapper::toDomain);
+    }
+
 
     private Pageable toPageable(PaginationCommand command) {
         return PageRequest.of(command.page(), command.size());

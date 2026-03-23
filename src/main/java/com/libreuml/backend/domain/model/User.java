@@ -34,6 +34,10 @@ public abstract class User {
 
     private int passwordVersion;
 
+    // Nullable: set only when the user has authenticated via the respective OAuth provider.
+    private String githubId;
+    private String googleId;
+
     public void changePassword(String newPassword) {
         this.password = newPassword;
         this.passwordVersion++;
@@ -41,6 +45,14 @@ public abstract class User {
 
     public void desactivate() {
         this.active = false;
+    }
+
+    public void linkGithub(String githubId) {
+        this.githubId = githubId;
+    }
+
+    public void linkGoogle(String googleId) {
+        this.googleId = googleId;
     }
 
 }

@@ -23,4 +23,8 @@ public interface SpringDataUserRepository extends JpaRepository<UserEntity, UUID
     Page<UserEntity> findAllActive(Pageable pageable);
 
     long countByActiveTrue();
+
+    Optional<UserEntity> findByGithubId(String githubId);
+
+    Optional<UserEntity> findByGoogleId(String googleId);
 }
