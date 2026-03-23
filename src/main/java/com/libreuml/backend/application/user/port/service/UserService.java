@@ -2,6 +2,7 @@ package com.libreuml.backend.application.user.port.service;
 
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;
+import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -31,6 +32,7 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
     private final UserFactory userFactory;
     private final TokenProviderPort tokenProvider;
     private final UserMapper userMapper;
+    private final MetricsPort metricsPort;
 
     @Override
     public User create(CreateUserCommand command) {
@@ -39,7 +41,9 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
         }
         String encodedPassword = encodePassword(command.password());
         User userToSave = userFactory.buildUser(command, encodedPassword);
-        return userRepository.save(userToSave);
+        User saved = userRepository.save(userToSave);
+        metricsPort.incrementUserRegistered();
+        return saved;
     }
 
 

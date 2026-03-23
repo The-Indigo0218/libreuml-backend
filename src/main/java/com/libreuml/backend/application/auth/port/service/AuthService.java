@@ -3,6 +3,7 @@ package com.libreuml.backend.application.auth.port.service;
 import com.libreuml.backend.application.auth.dto.TokenPair;
 import com.libreuml.backend.application.auth.port.in.LoginWithRefreshUseCase;
 import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
+import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.in.dto.LoginCommand;
@@ -36,14 +37,19 @@ public class AuthService implements LoginWithRefreshUseCase {
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final MetricsPort metricsPort;
 
     @Override
     @Transactional
     public TokenPair login(LoginCommand command, String ipAddress, String userAgent) {
         User user = userRepository.findByEmail(command.email())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    metricsPort.incrementFailedLogin();
+                    return new UserNotFoundException("User not found");
+                });
 
         if (!passwordEncoder.matches(command.password(), user.getPassword())) {
+            metricsPort.incrementFailedLogin();
             throw new IncorrectPasswordException("Incorrect password");
         }
 

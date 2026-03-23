@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.diagram.port.service;
 
+import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.diagram.dto.CreateDiagramCommand;
 import com.libreuml.backend.application.diagram.dto.UpdateDiagramCommand;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
@@ -25,12 +26,15 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         UpdateDiagramUseCase, DeleteDiagramUseCase {
 
     private final DiagramRepository diagramRepository;
+    private final MetricsPort metricsPort;
 
     @Override
     public Diagram create(CreateDiagramCommand command) {
         Diagram diagram = Diagram.create(
                 command.ownerId(), command.title(), command.type(), command.content());
-        return diagramRepository.save(diagram);
+        Diagram saved = diagramRepository.save(diagram);
+        metricsPort.incrementDiagramSaved(saved.getType());
+        return saved;
     }
 
     @Override

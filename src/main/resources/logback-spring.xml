@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!--
+        Register Spring Boot's colour and whitespace converters (%clr, %wEx, etc.)
+        so they can be referenced in the dev pattern below.  This include is safe to
+        keep globally because its only effect is converter registration.
+    -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!--
+        Spring-profile-aware Logback configuration.
+
+        prod  → structured JSON output via LogstashEncoder, suitable for ingestion by
+                Elasticsearch / Loki / any log aggregator that parses NDJSON.
+                Each log line is a single JSON object with at minimum:
+                  @timestamp, level, logger_name, message, and stack_trace when present.
+                Micrometer Tracing populates the MDC with traceId and spanId, which
+                LogstashEncoder includes automatically via includeMdcKeyName.
+
+        !prod → human-readable, colour-highlighted console output for local dev and CI.
+                The pattern mirrors Spring Boot's default but prepends [traceId/spanId]
+                from the MDC so developers can correlate log lines with traces
+                (values are empty strings when tracing is disabled or probability=0).
+    -->
+
+    <springProfile name="prod">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdcKeyName>traceId</includeMdcKeyName>
+                <includeMdcKeyName>spanId</includeMdcKeyName>
+                <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                    <maxDepthPerThrowable>20</maxDepthPerThrowable>
+                    <maxLength>8192</maxLength>
+                    <rootCauseFirst>true</rootCauseFirst>
+                </throwableConverter>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.hibernate.SQL"            level="WARN"/>
+        <logger name="org.flywaydb"                 level="WARN"/>
+        <logger name="com.zaxxer.hikari"            level="WARN"/>
+        <logger name="io.micrometer"                level="WARN"/>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} [%X{traceId}/%X{spanId}] %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx</pattern>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

@@ -48,6 +48,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/oauth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                        // Actuator: liveness/readiness probes and Prometheus scraping are unauthenticated.
+                        // All other management endpoints (/internal/metrics, /internal/info) require auth.
+                        .requestMatchers("/internal/health/**").permitAll()
+                        .requestMatchers("/internal/prometheus").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
