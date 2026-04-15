@@ -12,6 +12,7 @@ import com.libreuml.backend.application.diagram.port.in.UpdateDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.domain.model.Diagram;
 import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -75,8 +75,8 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
 
     @Override
     @Transactional(readOnly = true)
-    public List<Diagram> listByOwner(UUID ownerId) {
-        return diagramRepository.findByOwnerId(ownerId);
+    public PagedResult<Diagram> listByOwner(UUID ownerId, int page, int size) {
+        return diagramRepository.findAllByOwnerId(ownerId, page, size);
     }
 
     @Override
@@ -97,6 +97,36 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                     "Version mismatch: client sent " + command.version()
                     + " but current version is " + diagram.getVersion()
                     + ". Reload the diagram and retry.");
+        }
+
+        // Quota adjustment: only needed when the content field changes.
+        // If content is null in the command, only the title is being updated — no size delta.
+        if (command.content() != null) {
+            long oldSize = diagram.getContent() != null
+                    ? diagram.getContent().toString().getBytes(StandardCharsets.UTF_8).length
+                    : 0L;
+            long newSize = command.content().toString().getBytes(StandardCharsets.UTF_8).length;
+            long delta = newSize - oldSize;
+
+            if (delta != 0) {
+                User owner = userRepository.getUserById(command.requesterId())
+                        .orElseThrow(() -> new UserNotFoundException("User not found: " + command.requesterId()));
+
+                if (delta > 0 && !owner.hasQuotaFor(delta)) {
+                    throw new QuotaExceededException(
+                            "Storage quota exceeded. Cannot expand diagram: would need "
+                            + delta + " more bytes but only "
+                            + (owner.getStorageQuotaBytes() - owner.getStorageUsedBytes())
+                            + " bytes remain.");
+                }
+
+                if (delta > 0) {
+                    owner.incrementUsage(delta);
+                } else {
+                    owner.decrementUsage(-delta); // -delta is positive; uses floor-clamped decrement
+                }
+                userRepository.save(owner);
+            }
         }
 
         diagram.update(command.title(), command.content(), command.requesterId());

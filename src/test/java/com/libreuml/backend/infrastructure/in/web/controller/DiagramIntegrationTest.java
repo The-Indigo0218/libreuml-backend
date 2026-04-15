@@ -145,7 +145,91 @@ class DiagramIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)))
+                .andExpect(jsonPath("$.pageNumber").value(0))
+                .andExpect(jsonPath("$.pageSize").value(20));
+    }
+
+    @Test
+    void list_withSizeExceedingMax_returns400() throws Exception {
+        mockMvc.perform(get(DIAGRAMS_URL + "?size=101")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void list_defaultsToPage0Size20() throws Exception {
+        mockMvc.perform(get(DIAGRAMS_URL)
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageNumber").value(0))
+                .andExpect(jsonPath("$.pageSize").value(20));
+    }
+
+    @Test
+    void list_orderedByUpdatedAtDesc_newestFirst() throws Exception {
+        String idFirst  = createDiagram("First Created", "CLASS");
+        String idSecond = createDiagram("Second Created", "SEQUENCE");
+
+        // Advance updatedAt on the first diagram via a PATCH so it becomes the most recent.
+        mockMvc.perform(patch(DIAGRAMS_URL + "/" + idFirst)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"First Updated\",\"version\":0}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk());
+
+        com.fasterxml.jackson.databind.JsonNode body = objectMapper.readTree(
+                mockMvc.perform(get(DIAGRAMS_URL + "?size=10")
+                                .cookie(ownerCookies)
+                                .header("X-Forwarded-For", ownerIp))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse().getContentAsString()
+        );
+
+        com.fasterxml.jackson.databind.JsonNode content = body.get("content");
+        // idFirst was patched last, so it must appear before idSecond
+        int posFirst  = -1, posSecond = -1;
+        for (int i = 0; i < content.size(); i++) {
+            String id = content.get(i).get("id").asText();
+            if (id.equals(idFirst))  posFirst  = i;
+            if (id.equals(idSecond)) posSecond = i;
+        }
+        assertThat(posFirst).isGreaterThanOrEqualTo(0);
+        assertThat(posSecond).isGreaterThanOrEqualTo(0);
+        assertThat(posFirst).isLessThan(posSecond);
+    }
+
+    @Test
+    void list_paginateThroughAll50Diagrams() throws Exception {
+        for (int i = 1; i <= 50; i++) {
+            createDiagram("Diagram " + i, "CLASS");
+        }
+
+        int collected = 0;
+        int page = 0;
+        final int size = 20;
+        boolean isLast = false;
+
+        while (!isLast) {
+            com.fasterxml.jackson.databind.JsonNode body = objectMapper.readTree(
+                    mockMvc.perform(get(DIAGRAMS_URL + "?page=" + page + "&size=" + size)
+                                    .cookie(ownerCookies)
+                                    .header("X-Forwarded-For", ownerIp))
+                            .andExpect(status().isOk())
+                            .andReturn().getResponse().getContentAsString()
+            );
+            collected += body.get("content").size();
+            isLast = body.get("isLast").asBoolean();
+            long totalElements = body.get("totalElements").asLong();
+            assertThat(totalElements).isGreaterThanOrEqualTo(50);
+            page++;
+        }
+
+        assertThat(collected).isGreaterThanOrEqualTo(50);
     }
 
     // ---- update ----

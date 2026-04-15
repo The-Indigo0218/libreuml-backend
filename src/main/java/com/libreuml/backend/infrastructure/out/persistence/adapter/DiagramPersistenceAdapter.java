@@ -1,14 +1,18 @@
 package com.libreuml.backend.infrastructure.out.persistence.adapter;
 
+import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
 import com.libreuml.backend.domain.model.Diagram;
 import com.libreuml.backend.infrastructure.out.persistence.entity.DiagramEntity;
 import com.libreuml.backend.infrastructure.out.persistence.repository.SpringDataDiagramRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,10 +54,17 @@ public class DiagramPersistenceAdapter implements DiagramRepository {
     }
 
     @Override
-    public List<Diagram> findByOwnerId(UUID ownerId) {
-        return jpaRepository.findByOwnerId(ownerId).stream()
-                .map(this::toDomain)
-                .toList();
+    public PagedResult<Diagram> findAllByOwnerId(UUID ownerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Page<DiagramEntity> diagramPage = jpaRepository.findAllByOwnerId(ownerId, pageable);
+        return new PagedResult<>(
+                diagramPage.getContent().stream().map(this::toDomain).toList(),
+                diagramPage.getNumber(),
+                diagramPage.getSize(),
+                diagramPage.getTotalElements(),
+                diagramPage.getTotalPages(),
+                diagramPage.isLast()
+        );
     }
 
     @Override

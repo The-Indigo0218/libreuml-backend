@@ -47,11 +47,12 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
 
     private static final long QUOTA_BYTES = 10_485_760L;
 
-    // Exact size of {"key":"<value>"} where value is this many 'a' characters.
-    // Overhead: {"key":"  "} → 8 chars prefix + 2 chars suffix = 10 chars total.
-    // We want the full serialized JSON to be exactly MAX_CONTENT_BYTES = 5 * 1024 * 1024 = 5 242 880.
-    // Value length = 5 242 880 - 10 = 5 242 870.
-    private static final int VALUE_LENGTH = 5 * 1024 * 1024 - 10;
+    // Content-string sizing: {"key":"<N 'a' chars>"} has 10 bytes of JSON overhead.
+    // VALUE_LENGTH_X_MB yields a serialized ObjectNode of exactly X * 1024 * 1024 bytes,
+    // which is the value read back by content.toString().getBytes(UTF_8) in the service.
+    private static final int VALUE_LENGTH    = 5 * 1024 * 1024 - 10; // → 5 242 880 bytes (5 MB, per-diagram limit)
+    private static final int VALUE_LENGTH_3MB = 3 * 1024 * 1024 - 10; // → 3 145 728 bytes (3 MB)
+    private static final int VALUE_LENGTH_1MB = 1 * 1024 * 1024 - 10; // → 1 048 576 bytes (1 MB)
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
@@ -170,6 +171,160 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
         assertThat(available).isGreaterThan(0L);
     }
 
+    // ---- update() quota enforcement ----
+
+    /**
+     * Expanding a diagram's content beyond the remaining quota must be rejected with 422.
+     *
+     * <p>Setup: three 3 MB diagrams (used = 9 MB). Remaining = 1 MB.
+     * Update the first from 3 MB to 5 MB → delta = +2 MB → exceeds 1 MB remaining → 422.
+     */
+    @Test
+    void update_increasingSize_checksQuota() throws Exception {
+        String content3MB = buildContent(VALUE_LENGTH_3MB);
+        String content5MB = buildLargeContent();
+
+        // Fill to 9 MB: 3 × 3 MB diagrams.
+        String idA = createDiagram("A", "CLASS", content3MB);
+        createDiagram("B", "STATE", content3MB);
+        createDiagram("C", "ACTIVITY", content3MB);
+
+        // Try to expand A from 3 MB to 5 MB: delta = +2 MB, but only 1 MB is available.
+        mockMvc.perform(patch(DIAGRAMS_URL + "/" + idA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":" + content5MB + ",\"version\":0}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.title").value("Storage Quota Exceeded"));
+    }
+
+    /**
+     * Shrinking a diagram's content must reduce {@code storage_used_bytes} and allow new creation.
+     *
+     * <p>Setup: two 5 MB diagrams (quota full). Shrink A to empty content → frees 5 MB.
+     * Verify a new creation succeeds and the quota endpoint reflects the freed space.
+     */
+    @Test
+    void update_decreasingSize_freesQuota() throws Exception {
+        String content5MB = buildLargeContent();
+
+        // Fill quota.
+        String idA = createDiagram("A", "CLASS", content5MB);
+        createDiagram("B", "STATE", content5MB);
+
+        // Confirm quota is full.
+        mockMvc.perform(post(DIAGRAMS_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Blocked\",\"type\":\"SEQUENCE\"}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isUnprocessableEntity());
+
+        // Shrink A from 5 MB to empty ({} = 2 bytes): delta = -(5 MB - 2).
+        mockMvc.perform(patch(DIAGRAMS_URL + "/" + idA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":{},\"version\":0}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk());
+
+        // Now there is ~5 MB free — a small diagram fits.
+        mockMvc.perform(post(DIAGRAMS_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"After Shrink\",\"type\":\"ACTIVITY\"}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isCreated());
+
+        // Quota endpoint reflects that space was freed.
+        MvcResult quotaResult = mockMvc.perform(get(QUOTA_URL)
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk())
+                .andReturn();
+        long available = objectMapper.readTree(quotaResult.getResponse().getContentAsString())
+                .get("available").asLong();
+        assertThat(available).isGreaterThan(0L);
+    }
+
+    /**
+     * Updating a diagram with content of exactly the same byte size must leave
+     * {@code storage_used_bytes} unchanged (delta = 0, no user record touched).
+     *
+     * <p>Create with {@code {}} (2 bytes), patch with {@code {}} again (2 bytes): used stays constant.
+     */
+    @Test
+    void update_sameSize_noQuotaChange() throws Exception {
+        // Create with empty content ({} = 2 bytes).
+        String idA = createDiagram("Same Size", "CLASS", null);
+
+        // Read used bytes before the patch.
+        MvcResult before = mockMvc.perform(get(QUOTA_URL)
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk())
+                .andReturn();
+        long usedBefore = objectMapper.readTree(before.getResponse().getContentAsString())
+                .get("used").asLong();
+
+        // Patch with the same size content ({} = 2 bytes) → delta = 0.
+        mockMvc.perform(patch(DIAGRAMS_URL + "/" + idA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":{},\"version\":0}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk());
+
+        // Used bytes must be identical to the pre-patch value.
+        MvcResult after = mockMvc.perform(get(QUOTA_URL)
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isOk())
+                .andReturn();
+        long usedAfter = objectMapper.readTree(after.getResponse().getContentAsString())
+                .get("used").asLong();
+
+        assertThat(usedAfter).isEqualTo(usedBefore);
+    }
+
+    /**
+     * Verifies that {@code PATCH /diagrams/{id}} cannot bypass quota limits set by
+     * {@code POST /diagrams}.
+     *
+     * <p>Scenario (mirrors the real-world bypass attempt):
+     * <ol>
+     *   <li>Three diagrams fill 9 MB (5 MB + 3 MB + 1 MB).</li>
+     *   <li>No more creates are possible (remaining = 1 MB; next create would need > 0 bytes).</li>
+     *   <li>Attacker tries to expand the 1 MB diagram to 5 MB via PATCH → delta = 4 MB → 422.</li>
+     * </ol>
+     */
+    @Test
+    void update_bypassAttempt_blocked() throws Exception {
+        String content5MB = buildLargeContent();
+        String content3MB = buildContent(VALUE_LENGTH_3MB);
+        String content1MB = buildContent(VALUE_LENGTH_1MB);
+
+        // Fill 9 MB: 5 MB + 3 MB + 1 MB.
+        createDiagram("Big",    "CLASS",    content5MB);
+        createDiagram("Medium", "STATE",    content3MB);
+        String idSmall = createDiagram("Small",  "ACTIVITY", content1MB);
+
+        // Confirm that creating with even tiny content is blocked (only 1 MB left).
+        // A small diagram with {} (2 bytes) still fits, but note: 9MB + 3MB+1MB = 9.44 MB so far,
+        // remaining ≈ 1 MB. Creating with 1 MB would push used to 10 MB (still OK).
+        // The key assertion is on the PATCH attempt below.
+
+        // Bypass attempt: patch the 1 MB diagram to 5 MB → delta = +4 MB → exceeds 1 MB free → 422.
+        mockMvc.perform(patch(DIAGRAMS_URL + "/" + idSmall)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":" + content5MB + ",\"version\":0}")
+                        .cookie(ownerCookies)
+                        .header("X-Forwarded-For", ownerIp))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.title").value("Storage Quota Exceeded"));
+    }
+
     // ---- helpers ----
 
     private void register(String email, String ip) throws Exception {
@@ -223,6 +378,17 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
      * = 8 bytes prefix + VALUE_LENGTH bytes + 2 bytes suffix = 5 242 880 bytes exactly.
      */
     private String buildLargeContent() {
-        return "{\"key\":\"" + "a".repeat(VALUE_LENGTH) + "\"}";
+        return buildContent(VALUE_LENGTH);
+    }
+
+    /**
+     * Builds a JSON content string using the given value length (number of {@code 'a'} characters).
+     *
+     * <p>Total UTF-8 size = {@code valueLength + 10} bytes (10-byte JSON overhead for
+     * {@code {"key":"..."}}). Use the {@code VALUE_LENGTH_X_MB} constants to target
+     * exact megabyte thresholds.
+     */
+    private String buildContent(int valueLength) {
+        return "{\"key\":\"" + "a".repeat(valueLength) + "\"}";
     }
 }
