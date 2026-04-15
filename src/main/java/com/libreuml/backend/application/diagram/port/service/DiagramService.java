@@ -39,6 +39,12 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         User user = userRepository.getUserById(command.ownerId())
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + command.ownerId()));
 
+        // Domain invariant first: Diagram.create() calls assertPayloadSize() and throws
+        // DiagramPayloadTooLargeException if the content exceeds the 5 MB per-diagram ceiling.
+        // This must run before the quota check so oversized payloads report the domain error.
+        Diagram diagram = Diagram.create(
+                command.ownerId(), command.title(), command.type(), command.content());
+
         // Compute UTF-8 payload size using the same mechanism as Diagram.assertPayloadSize().
         long payloadBytes = command.content() != null
                 ? command.content().toString().getBytes(StandardCharsets.UTF_8).length
@@ -51,8 +57,6 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                     + " bytes, requested: " + payloadBytes + " bytes.");
         }
 
-        Diagram diagram = Diagram.create(
-                command.ownerId(), command.title(), command.type(), command.content());
         Diagram saved = diagramRepository.save(diagram);
 
         user.incrementUsage(payloadBytes);
