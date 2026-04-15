@@ -10,12 +10,17 @@ import com.libreuml.backend.application.diagram.port.in.DeleteDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.GetDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.UpdateDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Diagram;
+import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
+import com.libreuml.backend.domain.model.exception.QuotaExceededException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,13 +31,33 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         UpdateDiagramUseCase, DeleteDiagramUseCase {
 
     private final DiagramRepository diagramRepository;
+    private final UserRepository userRepository;
     private final MetricsPort metricsPort;
 
     @Override
     public Diagram create(CreateDiagramCommand command) {
+        User user = userRepository.getUserById(command.ownerId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.ownerId()));
+
+        // Compute UTF-8 payload size using the same mechanism as Diagram.assertPayloadSize().
+        long payloadBytes = command.content() != null
+                ? command.content().toString().getBytes(StandardCharsets.UTF_8).length
+                : 0L;
+
+        if (!user.hasQuotaFor(payloadBytes)) {
+            throw new QuotaExceededException(
+                    "Storage quota exceeded. Quota: " + user.getStorageQuotaBytes()
+                    + " bytes, already used: " + user.getStorageUsedBytes()
+                    + " bytes, requested: " + payloadBytes + " bytes.");
+        }
+
         Diagram diagram = Diagram.create(
                 command.ownerId(), command.title(), command.type(), command.content());
         Diagram saved = diagramRepository.save(diagram);
+
+        user.incrementUsage(payloadBytes);
+        userRepository.save(user);
+
         metricsPort.incrementDiagramSaved(saved.getType());
         return saved;
     }
@@ -83,6 +108,16 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         Diagram diagram = diagramRepository.findById(diagramId)
                 .orElseThrow(() -> new DiagramNotFoundException("Diagram not found: " + diagramId));
         diagram.delete(requesterId);
+
+        long payloadBytes = diagram.getContent() != null
+                ? diagram.getContent().toString().getBytes(StandardCharsets.UTF_8).length
+                : 0L;
+
         diagramRepository.deleteById(diagramId);
+
+        User user = userRepository.getUserById(requesterId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + requesterId));
+        user.decrementUsage(payloadBytes);
+        userRepository.save(user);
     }
 }

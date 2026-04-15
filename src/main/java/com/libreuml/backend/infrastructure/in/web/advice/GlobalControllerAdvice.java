@@ -7,6 +7,7 @@ import com.libreuml.backend.application.diagram.exception.DiagramConflictExcepti
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
 import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
+import com.libreuml.backend.domain.model.exception.QuotaExceededException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -108,6 +109,14 @@ public class GlobalControllerAdvice {
     public ProblemDetail handleDiagramPayloadTooLarge(DiagramPayloadTooLargeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         problemDetail.setTitle("Diagram Payload Too Large");
+        return problemDetail;
+    }
+
+    // 422 Unprocessable Entity — new diagram would push the user over their 10 MB storage quota
+    @ExceptionHandler(QuotaExceededException.class)
+    public ProblemDetail handleQuotaExceeded(QuotaExceededException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problemDetail.setTitle("Storage Quota Exceeded");
         return problemDetail;
     }
 

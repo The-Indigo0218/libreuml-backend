@@ -72,4 +72,10 @@ public class UserEntity {
 
     @Column(name = "google_id")
     private String googleId;
+
+    @Column(name = "storage_quota_bytes", nullable = false)
+    private long storageQuotaBytes;
+
+    @Column(name = "storage_used_bytes", nullable = false)
+    private long storageUsedBytes;
 }

@@ -38,6 +38,28 @@ public abstract class User {
     private String githubId;
     private String googleId;
 
+    // Storage quota — 10 MB per user. storageQuotaBytes carries the ceiling assigned to this user;
+    // storageUsedBytes tracks the running total across all owned diagrams.
+    // @Builder.Default ensures new users built via the SuperBuilder get the correct 10 MB ceiling
+    // rather than the Java primitive default of 0.
+    @Builder.Default
+    private long storageQuotaBytes = 10_485_760L;
+
+    @Builder.Default
+    private long storageUsedBytes = 0L;
+
+    public boolean hasQuotaFor(long bytes) {
+        return (this.storageUsedBytes + bytes) <= this.storageQuotaBytes;
+    }
+
+    public void incrementUsage(long bytes) {
+        this.storageUsedBytes += bytes;
+    }
+
+    public void decrementUsage(long bytes) {
+        this.storageUsedBytes = Math.max(0L, this.storageUsedBytes - bytes);
+    }
+
     public void changePassword(String newPassword) {
         this.password = newPassword;
         this.passwordVersion++;
