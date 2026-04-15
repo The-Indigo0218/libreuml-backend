@@ -1,5 +1,9 @@
 package com.libreuml.backend.infrastructure.in.web.advice;
 
+import com.libreuml.backend.application.apikey.exception.ApiKeyNotFoundException;
+import com.libreuml.backend.application.apikey.exception.ApiKeyOwnershipException;
+import com.libreuml.backend.application.apikey.exception.InvalidRedemptionCodeException;
+import com.libreuml.backend.application.apikey.exception.RedemptionLimitExceededException;
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
@@ -27,6 +31,36 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalControllerAdvice {
+
+    // ── API Key exceptions ────────────────────────────────────────────────────
+
+    @ExceptionHandler(ApiKeyNotFoundException.class)
+    public ProblemDetail handleApiKeyNotFound(ApiKeyNotFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        pd.setTitle("API Key Not Found");
+        return pd;
+    }
+
+    @ExceptionHandler(ApiKeyOwnershipException.class)
+    public ProblemDetail handleApiKeyOwnership(ApiKeyOwnershipException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        pd.setTitle("API Key Access Denied");
+        return pd;
+    }
+
+    @ExceptionHandler(InvalidRedemptionCodeException.class)
+    public ProblemDetail handleInvalidRedemptionCode(InvalidRedemptionCodeException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        pd.setTitle("Invalid Redemption Code");
+        return pd;
+    }
+
+    @ExceptionHandler(RedemptionLimitExceededException.class)
+    public ProblemDetail handleRedemptionLimitExceeded(RedemptionLimitExceededException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        pd.setTitle("Redemption Limit Exceeded");
+        return pd;
+    }
 
     // 404 Not Found
     @ExceptionHandler(ResourceNotFoundException.class)
