@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
 
 /**
  * Hybrid authentication filter supporting two token transports:
@@ -45,7 +46,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             if (!tokenProvider.validateToken(token)) {
-                writeUnauthorized(response, "Invalid or expired token.");
+                writeUnauthorized(request, response, "Invalid or expired token.");
                 return;
             }
 
@@ -54,7 +55,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
             int tokenPwdVersion = tokenProvider.getPwdVersionFromToken(token);
             if (tokenPwdVersion != userDetails.getPasswordVersion()) {
-                writeUnauthorized(response, "Token invalidated. Please log in again.");
+                writeUnauthorized(request, response, "Token invalidated. Please log in again.");
                 return;
             }
 
@@ -68,10 +69,15 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+    private void writeUnauthorized(HttpServletRequest request, HttpServletResponse response, String message)
+            throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"" + message + "\"}");
+        response.getWriter().write(
+                "{\"status\":401,\"error\":\"Unauthorized\","
+                + "\"message\":\"" + message + "\","
+                + "\"timestamp\":\"" + Instant.now() + "\","
+                + "\"path\":\"" + request.getRequestURI() + "\"}");
     }
 
     private String resolveToken(HttpServletRequest request) {

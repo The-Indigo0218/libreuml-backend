@@ -124,7 +124,7 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.title").value("Storage Quota Exceeded"));
+                .andExpect(jsonPath("$.error").value("Unprocessable Entity"));
     }
 
     // ---- delete decrements usage and re-enables creation ----
@@ -196,7 +196,7 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.title").value("Storage Quota Exceeded"));
+                .andExpect(jsonPath("$.error").value("Unprocessable Entity"));
     }
 
     /**
@@ -319,7 +319,7 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.title").value("Storage Quota Exceeded"));
+                .andExpect(jsonPath("$.error").value("Unprocessable Entity"));
     }
 
     // ---- helpers ----

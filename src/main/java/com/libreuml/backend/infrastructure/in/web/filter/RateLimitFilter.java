@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,7 +51,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
         } else {
-            writeTooManyRequests(response);
+            writeTooManyRequests(request, response);
         }
     }
 
@@ -70,9 +71,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
-    private void writeTooManyRequests(HttpServletResponse response) throws IOException {
+    private void writeTooManyRequests(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setStatus(429);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"Too many requests. Please wait before trying again.\"}");
+        response.getWriter().write(
+                "{\"status\":429,\"error\":\"Too Many Requests\","
+                + "\"message\":\"Too many requests. Please wait before trying again.\","
+                + "\"timestamp\":\"" + Instant.now() + "\","
+                + "\"path\":\"" + request.getRequestURI() + "\"}");
     }
 }

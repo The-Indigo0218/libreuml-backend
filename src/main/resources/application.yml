@@ -2,6 +2,17 @@ spring:
   application:
     name: libreuml-backend
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+  mvc:
+    throw-exception-if-no-handler-found: true
+
+  web:
+    resources:
+      add-mappings: false
+
   datasource:
     url: jdbc:postgresql://localhost:5432/libreumldb
     username: postgres

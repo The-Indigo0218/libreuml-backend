@@ -108,7 +108,7 @@ class DiagramIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.title").value("Diagram Payload Too Large"));
+                .andExpect(jsonPath("$.error").value("Unprocessable Entity"));
     }
 
     // ---- get ----
@@ -269,7 +269,7 @@ class DiagramIntegrationTest extends AbstractIntegrationTest {
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.title").value("Diagram Conflict"));
+                .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
     @Test

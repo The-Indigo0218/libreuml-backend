@@ -116,7 +116,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         Optional<ApiKey> maybeKey = apiKeyRepository.findByHashedKey(hashedKey);
 
         if (maybeKey.isEmpty() || !maybeKey.get().isActive()) {
-            writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or inactive API key.");
+            writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or inactive API key.");
             return;
         }
 
@@ -124,7 +124,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
         // Scope check: READ keys may only perform GET requests.
         if (!apiKey.canPerform(request.getMethod())) {
-            writeError(response, HttpServletResponse.SC_FORBIDDEN,
+            writeError(request, response, HttpServletResponse.SC_FORBIDDEN,
                     "API key scope '" + apiKey.getScope() + "' does not permit "
                     + request.getMethod() + " requests.");
             return;
@@ -142,7 +142,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         response.setHeader("X-RateLimit-Reset", String.valueOf(resetEpochSeconds));
 
         if (!probe.isConsumed()) {
-            writeError(response, 429, "Rate limit exceeded. Resets at epoch " + resetEpochSeconds + ".");
+            writeError(request, response, 429, "Rate limit exceeded. Resets at epoch " + resetEpochSeconds + ".");
             return;
         }
 
@@ -219,10 +219,20 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void writeError(HttpServletResponse response, int status, String message)
+    private void writeError(HttpServletRequest request, HttpServletResponse response, int status, String message)
             throws IOException {
+        String errorPhrase = switch (status) {
+            case 401 -> "Unauthorized";
+            case 403 -> "Forbidden";
+            case 429 -> "Too Many Requests";
+            default  -> "Error";
+        };
         response.setStatus(status);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"" + message + "\"}");
+        response.getWriter().write(
+                "{\"status\":" + status + ",\"error\":\"" + errorPhrase + "\","
+                + "\"message\":\"" + message + "\","
+                + "\"timestamp\":\"" + Instant.now() + "\","
+                + "\"path\":\"" + request.getRequestURI() + "\"}");
     }
 }
