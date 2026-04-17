@@ -3,6 +3,7 @@ package com.libreuml.backend.infrastructure.out.metrics;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.domain.model.DiagramType;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -61,5 +62,42 @@ public class MicrometerMetricsAdapter implements MetricsPort {
                 .description("Total number of successful OAuth logins or auto-provisioning events")
                 .register(meterRegistry)
                 .increment();
+    }
+
+    @Override
+    public void incrementActiveUsersDaily(String method) {
+        Counter.builder("libreuml.active.users.daily")
+                .tag("method", method)
+                .description("Successful logins per authentication method — proxy for daily active users")
+                .register(meterRegistry)
+                .increment();
+    }
+
+    @Override
+    public void incrementQuotaRejection() {
+        Counter.builder("libreuml.quota.rejection")
+                .description("Total requests rejected with HTTP 422 due to storage quota exhaustion")
+                .register(meterRegistry)
+                .increment();
+    }
+
+    @Override
+    public void observeUserStorageBytes(long bytes) {
+        // High-cardinality user_id labels are avoided by recording the distribution instead.
+        // Bucket boundaries follow the 5 MB per-user quota ceiling (5_242_880 bytes).
+        DistributionSummary.builder("libreuml.storage.used.bytes")
+                .description("Distribution of storage_used_bytes across users, sampled on every storage mutation")
+                .baseUnit("bytes")
+                .serviceLevelObjectives(
+                        102_400,   // 100 KB
+                        524_288,   // 512 KB
+                        1_048_576, // 1 MB
+                        2_097_152, // 2 MB
+                        3_145_728, // 3 MB
+                        4_194_304, // 4 MB
+                        5_242_880  // 5 MB (quota ceiling)
+                )
+                .register(meterRegistry)
+                .record(bytes);
     }
 }

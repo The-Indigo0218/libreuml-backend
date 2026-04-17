@@ -53,6 +53,8 @@ public class AuthService implements LoginWithRefreshUseCase {
             throw new IncorrectPasswordException("Incorrect password");
         }
 
+        metricsPort.incrementActiveUsersDaily("credential");
+
         String accessToken = tokenProvider.generateToken(user);
         String rawRefreshToken = generateOpaqueToken();
 

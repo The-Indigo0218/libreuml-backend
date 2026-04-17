@@ -63,6 +63,7 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         userRepository.save(user);
 
         metricsPort.incrementDiagramSaved(saved.getType());
+        metricsPort.observeUserStorageBytes(user.getStorageUsedBytes());
         return saved;
     }
 
@@ -130,6 +131,7 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                     owner.decrementUsage(-delta); // -delta is positive; uses floor-clamped decrement
                 }
                 userRepository.save(owner);
+                metricsPort.observeUserStorageBytes(owner.getStorageUsedBytes());
             }
         }
 
@@ -153,5 +155,6 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + requesterId));
         user.decrementUsage(payloadBytes);
         userRepository.save(user);
+        metricsPort.observeUserStorageBytes(user.getStorageUsedBytes());
     }
 }

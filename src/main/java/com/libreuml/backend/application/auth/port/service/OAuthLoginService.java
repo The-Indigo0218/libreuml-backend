@@ -54,7 +54,9 @@ public class OAuthLoginService implements OAuthLoginUseCase {
                 .fetchUserInfo(command.code(), command.redirectUri());
 
         User user = findOrProvision(userInfo, command.provider());
-        metricsPort.incrementOAuthLogin(command.provider().name().toLowerCase());
+        String providerName = command.provider().name().toLowerCase();
+        metricsPort.incrementOAuthLogin(providerName);
+        metricsPort.incrementActiveUsersDaily(providerName);
 
         return issueTokens(user, command.ipAddress(), command.userAgent());
     }

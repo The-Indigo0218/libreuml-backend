@@ -6,6 +6,7 @@ import com.libreuml.backend.application.apikey.exception.InvalidRedemptionCodeEx
 import com.libreuml.backend.application.apikey.exception.RedemptionLimitExceededException;
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.auth.exception.OAuthException;
+import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.courses.exception.CourseAlreadyExistsException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
@@ -23,6 +24,7 @@ import com.libreuml.backend.infrastructure.in.web.dto.response.ErrorResponse;
 import com.libreuml.backend.infrastructure.in.web.dto.response.FieldValidationError;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -38,7 +40,10 @@ import java.time.Instant;
 import java.util.List;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalControllerAdvice {
+
+    private final MetricsPort metricsPort;
 
     // ── Auth (401) ────────────────────────────────────────────────────────────
 
@@ -157,6 +162,7 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(QuotaExceededException.class)
     public ResponseEntity<ErrorResponse> handleQuotaExceeded(
             QuotaExceededException ex, HttpServletRequest req) {
+        metricsPort.incrementQuotaRejection();
         return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), req);
     }
 

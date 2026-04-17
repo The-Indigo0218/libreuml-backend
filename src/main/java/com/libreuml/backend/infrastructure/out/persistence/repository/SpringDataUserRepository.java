@@ -27,4 +27,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserEntity, UUID
     Optional<UserEntity> findByGithubId(String githubId);
 
     Optional<UserEntity> findByGoogleId(String googleId);
+
+    @Query("SELECT COALESCE(SUM(u.storageUsedBytes), 0) FROM UserEntity u")
+    long sumStorageUsedBytes();
 }

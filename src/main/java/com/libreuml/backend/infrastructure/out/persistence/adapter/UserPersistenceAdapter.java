@@ -90,6 +90,10 @@ public class UserPersistenceAdapter implements UserRepository {
                 .map(userPersistenceMapper::toDomain);
     }
 
+    @Override
+    public long sumStorageUsedBytes() {
+        return springDataUserRepository.sumStorageUsedBytes();
+    }
 
     private Pageable toPageable(PaginationCommand command) {
         return PageRequest.of(command.page(), command.size());
