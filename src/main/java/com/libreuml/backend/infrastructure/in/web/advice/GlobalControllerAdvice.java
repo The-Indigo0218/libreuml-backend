@@ -6,6 +6,9 @@ import com.libreuml.backend.application.apikey.exception.InvalidRedemptionCodeEx
 import com.libreuml.backend.application.apikey.exception.RedemptionLimitExceededException;
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.auth.exception.OAuthException;
+import com.libreuml.backend.application.emailverification.exception.EmailAlreadyVerifiedException;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
+import com.libreuml.backend.application.emailverification.exception.InvalidVerificationTokenException;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.courses.exception.CourseAlreadyExistsException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
@@ -44,6 +47,26 @@ import java.util.List;
 public class GlobalControllerAdvice {
 
     private final MetricsPort metricsPort;
+
+    // ── Email Verification ────────────────────────────────────────────────────
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerified(
+            EmailNotVerifiedException ex, HttpServletRequest req) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyVerified(
+            EmailAlreadyVerifiedException ex, HttpServletRequest req) {
+        return error(HttpStatus.CONFLICT, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidVerificationToken(
+            InvalidVerificationTokenException ex, HttpServletRequest req) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+    }
 
     // ── Auth (401) ────────────────────────────────────────────────────────────
 
@@ -137,8 +160,6 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.CONFLICT, ex.getMessage(), req);
     }
 
-    // 409 Conflict — optimistic locking: application-level version guard fires first; JPA @Version
-    // is the safety net for true concurrent transactions that bypass the service-layer check.
     @ExceptionHandler(DiagramConflictException.class)
     public ResponseEntity<ErrorResponse> handleDiagramConflict(
             DiagramConflictException ex, HttpServletRequest req) {

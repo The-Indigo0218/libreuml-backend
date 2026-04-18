@@ -5,7 +5,11 @@ import com.libreuml.backend.application.apikey.exception.*;
 import com.libreuml.backend.application.apikey.port.in.*;
 import com.libreuml.backend.application.apikey.port.out.ApiKeyRepository;
 import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.ApiKey;
+import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +39,16 @@ public class ApiKeyService implements
         RedeemPartnerCodeUseCase {
 
     private final ApiKeyRepository apiKeyRepository;
-
-    // ── USER KEY OPERATIONS ──────────────────────────────────────────────────
+    private final UserRepository userRepository;
 
     @Override
     public CreatedApiKeyResult createUserKey(CreateApiKeyCommand command) {
+        User user = userRepository.getUserById(command.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.userId()));
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email must be verified before creating API keys.");
+        }
+
         String plainKey  = generateKey(ApiKey.KeyType.USER);
         String hashedKey = hashKey(plainKey);
         String prefix    = plainKey.substring(0, Math.min(15, plainKey.length()));
@@ -76,8 +85,6 @@ public class ApiKeyService implements
         key.revoke(requesterId);
         apiKeyRepository.save(key);
     }
-
-    // ── PARTNER KEY OPERATIONS ───────────────────────────────────────────────
 
     @Override
     public CreatedApiKeyResult createPartnerKey(CreatePartnerKeyCommand command) {
@@ -134,7 +141,6 @@ public class ApiKeyService implements
                 .orElseThrow(() -> new ApiKeyNotFoundException("Partner key not found: " + command.keyId()));
 
         key.setActive(command.active());
-        // Clear revocation fields if re-activating.
         if (command.active()) {
             key.setRevokedAt(null);
             key.setRevokedBy(null);
@@ -150,8 +156,6 @@ public class ApiKeyService implements
         key.revoke(adminId);
         apiKeyRepository.save(key);
     }
-
-    // ── REDEMPTION ───────────────────────────────────────────────────────────
 
     @Override
     public CreatedApiKeyResult redeem(String redemptionCode, UUID userId) {
@@ -169,7 +173,6 @@ public class ApiKeyService implements
                     "Redemption limit reached for code: " + redemptionCode);
         }
 
-        // Create a new USER key inheriting the partner's rate limits and scope.
         String plainKey  = generateKey(ApiKey.KeyType.USER);
         String hashedKey = hashKey(plainKey);
         String prefix    = plainKey.substring(0, Math.min(15, plainKey.length()));
@@ -189,14 +192,11 @@ public class ApiKeyService implements
 
         ApiKey saved = apiKeyRepository.save(userKey);
 
-        // Track redemption usage on the partner key template.
         partnerKey.incrementRedemptionCount();
         apiKeyRepository.save(partnerKey);
 
         return new CreatedApiKeyResult(saved, plainKey);
     }
-
-    // ── INTERNAL HELPERS ─────────────────────────────────────────────────────
 
     /**
      * Generates a cryptographically strong random token prefixed with the key type.

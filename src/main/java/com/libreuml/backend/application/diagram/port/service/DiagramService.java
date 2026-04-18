@@ -10,6 +10,7 @@ import com.libreuml.backend.application.diagram.port.in.DeleteDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.GetDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.UpdateDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.application.common.PagedResult;
@@ -38,6 +39,10 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
     public Diagram create(CreateDiagramCommand command) {
         User user = userRepository.getUserById(command.ownerId())
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + command.ownerId()));
+
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email must be verified before saving diagrams.");
+        }
 
         // Domain invariant first: Diagram.create() calls assertPayloadSize() and throws
         // DiagramPayloadTooLargeException if the content exceeds the 5 MB per-diagram ceiling.
@@ -104,8 +109,6 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                     + ". Reload the diagram and retry.");
         }
 
-        // Quota adjustment: only needed when the content field changes.
-        // If content is null in the command, only the title is being updated — no size delta.
         if (command.content() != null) {
             long oldSize = diagram.getContent() != null
                     ? diagram.getContent().toString().getBytes(StandardCharsets.UTF_8).length
@@ -128,7 +131,7 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                 if (delta > 0) {
                     owner.incrementUsage(delta);
                 } else {
-                    owner.decrementUsage(-delta); // -delta is positive; uses floor-clamped decrement
+                    owner.decrementUsage(-delta);
                 }
                 userRepository.save(owner);
                 metricsPort.observeUserStorageBytes(owner.getStorageUsedBytes());

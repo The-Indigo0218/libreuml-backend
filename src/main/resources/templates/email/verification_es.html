@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifica tu correo — LibreUML</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;">
+          <tr>
+            <td style="background:#1a1a2e;padding:32px 40px;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">LibreUML</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 24px;">
+              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:20px;">Verifica tu direcci&#243;n de correo</h2>
+              <p style="margin:0 0 24px;color:#555555;font-size:15px;line-height:1.6;">
+                &#161;Gracias por registrarte! Haz clic en el bot&#243;n de abajo para verificar tu correo
+                electr&#243;nico y desbloquear todas las funciones de LibreUML, incluyendo guardar diagramas
+                y crear claves de API.
+              </p>
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-radius:6px;background:#4f46e5;">
+                    <a href="{{verificationUrl}}"
+                       style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                      Verificar correo electr&#243;nico
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0;color:#888888;font-size:13px;line-height:1.5;">
+                Este enlace expira en 24 horas. Si no creaste una cuenta en LibreUML, puedes ignorar
+                este correo de forma segura.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 24px;">
+              <p style="margin:0;color:#aaaaaa;font-size:12px;">
+                Si el bot&#243;n no funciona, copia y pega esta URL en tu navegador:<br/>
+                <a href="{{verificationUrl}}" style="color:#4f46e5;word-break:break-all;">{{verificationUrl}}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f4f4f7;padding:20px 40px;border-top:1px solid #e8e8e8;">
+              <p style="margin:0;color:#aaaaaa;font-size:12px;text-align:center;">
+                &copy; 2026 LibreUML &mdash; enviado a {{email}}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

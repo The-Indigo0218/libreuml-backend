@@ -4,10 +4,14 @@ import com.libreuml.backend.application.auth.dto.RefreshCommand;
 import com.libreuml.backend.application.auth.dto.TokenPair;
 import com.libreuml.backend.application.auth.port.in.LoginWithRefreshUseCase;
 import com.libreuml.backend.application.auth.port.in.RefreshTokenUseCase;
+import com.libreuml.backend.application.emailverification.port.in.ConfirmEmailUseCase;
+import com.libreuml.backend.application.emailverification.port.in.SendVerificationEmailUseCase;
 import com.libreuml.backend.application.user.port.in.CreateUserUseCase;
+import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ConfirmEmailRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.LoginRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.RegisterRequest;
 import com.libreuml.backend.infrastructure.in.web.mapper.AuthWebMapper;
+import com.libreuml.backend.infrastructure.security.CustomUserDetails;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,6 +32,8 @@ public class AuthController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final AuthWebMapper authWebMapper;
     private final CookieTokenStrategy cookieTokenStrategy;
+    private final SendVerificationEmailUseCase sendVerificationEmailUseCase;
+    private final ConfirmEmailUseCase confirmEmailUseCase;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest request) {
@@ -72,6 +79,23 @@ public class AuthController {
             refreshTokenUseCase.revoke(rawRefreshToken);
         }
         cookieTokenStrategy.clearTokenCookies(response);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/email/verify/send")
+    public ResponseEntity<Void> sendVerificationEmail(
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        sendVerificationEmailUseCase.send(principal.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/email/verify/confirm")
+    public ResponseEntity<Void> confirmEmail(
+            @RequestBody @Valid ConfirmEmailRequest request) {
+        confirmEmailUseCase.confirm(request.token());
         return ResponseEntity.noContent().build();
     }
 

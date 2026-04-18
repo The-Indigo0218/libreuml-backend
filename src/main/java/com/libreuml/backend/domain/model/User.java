@@ -3,6 +3,7 @@ package com.libreuml.backend.domain.model;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -34,14 +35,15 @@ public abstract class User {
 
     private int passwordVersion;
 
-    // Nullable: set only when the user has authenticated via the respective OAuth provider.
     private String githubId;
     private String googleId;
 
-    // Storage quota — 5 MB per user. storageQuotaBytes carries the ceiling assigned to this user;
-    // storageUsedBytes tracks the running total across all owned diagrams.
-    // @Builder.Default ensures new users built via the SuperBuilder get the correct 5 MB ceiling
-    // rather than the Java primitive default of 0.
+    private Instant emailVerifiedAt;
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
+    }
+
     @Builder.Default
     private long storageQuotaBytes = 5_242_880L;
 
