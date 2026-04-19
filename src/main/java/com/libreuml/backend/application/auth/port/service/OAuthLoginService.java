@@ -9,7 +9,9 @@ import com.libreuml.backend.application.auth.port.in.OAuthLoginUseCase;
 import com.libreuml.backend.application.auth.port.out.OAuthProviderPort;
 import com.libreuml.backend.application.auth.port.out.OAuthStatePort;
 import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.application.user.port.out.PasswordEncoderPort;
 import com.libreuml.backend.application.user.port.out.TokenProviderPort;
 import com.libreuml.backend.application.user.port.out.UserRepository;
@@ -44,6 +46,7 @@ public class OAuthLoginService implements OAuthLoginUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final MetricsPort metricsPort;
+    private final AuditLogPort auditLogPort;
 
     @Override
     @Transactional
@@ -57,6 +60,9 @@ public class OAuthLoginService implements OAuthLoginUseCase {
         String providerName = command.provider().name().toLowerCase();
         metricsPort.incrementOAuthLogin(providerName);
         metricsPort.incrementActiveUsersDaily(providerName);
+        auditLogPort.log(AuditEventType.OAUTH_LOGIN, user.getId(),
+                command.ipAddress(), command.userAgent(),
+                "{\"provider\":\"" + providerName + "\"}");
 
         return issueTokens(user, command.ipAddress(), command.userAgent());
     }

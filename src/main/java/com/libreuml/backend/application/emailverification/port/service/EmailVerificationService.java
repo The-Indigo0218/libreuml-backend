@@ -1,6 +1,8 @@
 package com.libreuml.backend.application.emailverification.port.service;
 
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.emailverification.exception.EmailAlreadyVerifiedException;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.application.emailverification.exception.InvalidVerificationTokenException;
 import com.libreuml.backend.application.emailverification.port.in.ConfirmEmailUseCase;
 import com.libreuml.backend.application.emailverification.port.in.SendVerificationEmailUseCase;
@@ -35,6 +37,7 @@ public class EmailVerificationService implements SendVerificationEmailUseCase, C
     private final UserRepository userRepository;
     private final EmailVerificationTokenRepository tokenRepository;
     private final EmailSenderPort emailSenderPort;
+    private final AuditLogPort auditLogPort;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -88,6 +91,7 @@ public class EmailVerificationService implements SendVerificationEmailUseCase, C
 
         token.setUsedAt(Instant.now());
         tokenRepository.save(token);
+        auditLogPort.log(AuditEventType.EMAIL_VERIFIED, user.getId(), null, null);
     }
 
     private String generateToken() {

@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.passwordreset.port.service;
 
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.passwordreset.exception.InvalidPasswordResetTokenException;
 import com.libreuml.backend.application.passwordreset.port.in.RequestPasswordResetUseCase;
 import com.libreuml.backend.application.passwordreset.port.in.ResetPasswordUseCase;
@@ -8,6 +9,7 @@ import com.libreuml.backend.application.emailverification.port.out.EmailSenderPo
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.PasswordEncoderPort;
 import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.domain.model.PasswordResetToken;
 import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailSenderPort emailSenderPort;
     private final PasswordEncoderPort passwordEncoder;
+    private final AuditLogPort auditLogPort;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -62,6 +65,7 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
 
             String resetUrl = frontendUrl + "/password/reset?token=" + rawToken;
             emailSenderPort.sendPasswordResetEmail(email, resetUrl);
+            auditLogPort.log(AuditEventType.PASSWORD_RESET_REQUESTED, user.getId(), null, null);
         });
         // Always returns normally — do not reveal whether the email exists
     }
@@ -90,6 +94,7 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
 
         token.setUsedAt(Instant.now());
         tokenRepository.save(token);
+        auditLogPort.log(AuditEventType.PASSWORD_RESET_COMPLETED, user.getId(), null, null);
     }
 
     private boolean isOAuthOnly(User user) {
