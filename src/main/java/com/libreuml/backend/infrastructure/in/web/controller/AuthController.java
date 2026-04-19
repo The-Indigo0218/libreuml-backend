@@ -6,10 +6,14 @@ import com.libreuml.backend.application.auth.port.in.LoginWithRefreshUseCase;
 import com.libreuml.backend.application.auth.port.in.RefreshTokenUseCase;
 import com.libreuml.backend.application.emailverification.port.in.ConfirmEmailUseCase;
 import com.libreuml.backend.application.emailverification.port.in.SendVerificationEmailUseCase;
+import com.libreuml.backend.application.passwordreset.port.in.RequestPasswordResetUseCase;
+import com.libreuml.backend.application.passwordreset.port.in.ResetPasswordUseCase;
 import com.libreuml.backend.application.user.port.in.CreateUserUseCase;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ConfirmEmailRequest;
+import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ForgotPasswordRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.LoginRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.RegisterRequest;
+import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ResetPasswordRequest;
 import com.libreuml.backend.infrastructure.in.web.mapper.AuthWebMapper;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
@@ -34,10 +38,13 @@ public class AuthController {
     private final CookieTokenStrategy cookieTokenStrategy;
     private final SendVerificationEmailUseCase sendVerificationEmailUseCase;
     private final ConfirmEmailUseCase confirmEmailUseCase;
+    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest request) {
-        createUserUseCase.create(authWebMapper.toCreateCommand(request));
+        var user = createUserUseCase.create(authWebMapper.toCreateCommand(request));
+        sendVerificationEmailUseCase.send(user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -96,6 +103,18 @@ public class AuthController {
     public ResponseEntity<Void> confirmEmail(
             @RequestBody @Valid ConfirmEmailRequest request) {
         confirmEmailUseCase.confirm(request.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        requestPasswordResetUseCase.request(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        resetPasswordUseCase.reset(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
     }
 

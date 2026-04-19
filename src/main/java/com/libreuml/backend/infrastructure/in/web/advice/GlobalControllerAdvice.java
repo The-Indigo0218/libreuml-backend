@@ -9,6 +9,7 @@ import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.emailverification.exception.EmailAlreadyVerifiedException;
 import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.emailverification.exception.InvalidVerificationTokenException;
+import com.libreuml.backend.application.passwordreset.exception.InvalidPasswordResetTokenException;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.courses.exception.CourseAlreadyExistsException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
@@ -65,6 +66,12 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(InvalidVerificationTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidVerificationToken(
             InvalidVerificationTokenException ex, HttpServletRequest req) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPasswordResetToken(
+            InvalidPasswordResetTokenException ex, HttpServletRequest req) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
     }
 

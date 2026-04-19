@@ -22,24 +22,52 @@ public class MailSenderAdapter implements EmailSenderPort {
 
     @Override
     public void sendVerificationEmail(String to, String verificationUrl) {
+        sendEmail(to, "Verify your LibreUML email address",
+                "templates/email/verification_en.html",
+                "templates/email/verification_en.txt",
+                new String[]{"{{verificationUrl}}", "{{email}}"},
+                new String[]{verificationUrl, to});
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String to, String resetUrl) {
+        sendEmail(to, "Reset your LibreUML password",
+                "templates/email/password_reset_en.html",
+                "templates/email/password_reset_en.txt",
+                new String[]{"{{resetUrl}}", "{{email}}"},
+                new String[]{resetUrl, to});
+    }
+
+    @Override
+    public void sendOAuthAccountEmail(String to) {
+        sendEmail(to, "Password reset requested — LibreUML",
+                "templates/email/oauth_account_en.html",
+                "templates/email/oauth_account_en.txt",
+                new String[]{"{{email}}"},
+                new String[]{to});
+    }
+
+    private void sendEmail(String to, String subject,
+                           String htmlTemplate, String textTemplate,
+                           String[] placeholders, String[] values) {
         try {
-            String html = loadTemplate("templates/email/verification_en.html")
-                    .replace("{{verificationUrl}}", verificationUrl)
-                    .replace("{{email}}", to);
-            String text = loadTemplate("templates/email/verification_en.txt")
-                    .replace("{{verificationUrl}}", verificationUrl)
-                    .replace("{{email}}", to);
+            String html = loadTemplate(htmlTemplate);
+            String text = loadTemplate(textTemplate);
+            for (int i = 0; i < placeholders.length; i++) {
+                html = html.replace(placeholders[i], values[i]);
+                text = text.replace(placeholders[i], values[i]);
+            }
 
             var message = mailSender.createMimeMessage();
             var helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(fromAddress);
             helper.setTo(to);
-            helper.setSubject("Verify your LibreUML email address");
+            helper.setSubject(subject);
             helper.setText(text, html);
 
             mailSender.send(message);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send verification email to " + to, e);
+            throw new RuntimeException("Failed to send email to " + to, e);
         }
     }
 

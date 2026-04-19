@@ -113,6 +113,10 @@ public class OAuthLoginService implements OAuthLoginUseCase {
                 .joinedAt(LocalDate.now())
                 .passwordVersion(0);
 
+        if (userInfo.emailVerified()) {
+            builder.emailVerifiedAt(Instant.now());
+        }
+
         Developer newUser = switch (provider) {
             case GITHUB -> builder.githubId(userInfo.providerId()).build();
             case GOOGLE -> builder.googleId(userInfo.providerId()).build();
