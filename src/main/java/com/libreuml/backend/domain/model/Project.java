@@ -24,12 +24,14 @@ public class Project {
     private String targetLanguage;
     private String basePackage;
     private DiagramVisibility visibility;
+    private ProjectKind projectKind;
     private long version;
     private Instant createdAt;
     private Instant updatedAt;
 
     public static Project create(UUID ownerId, String name, String description, String author,
-                                  String projectVersion, String targetLanguage, String basePackage) {
+                                  String projectVersion, String targetLanguage, String basePackage,
+                                  ProjectKind projectKind) {
         return Project.builder()
                 .ownerId(ownerId)
                 .name(name)
@@ -39,6 +41,7 @@ public class Project {
                 .targetLanguage(targetLanguage)
                 .basePackage(basePackage)
                 .visibility(DiagramVisibility.PRIVATE)
+                .projectKind(projectKind != null ? projectKind : ProjectKind.FREE)
                 .version(1L)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())

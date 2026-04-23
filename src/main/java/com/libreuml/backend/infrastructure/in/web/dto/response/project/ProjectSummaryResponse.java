@@ -2,6 +2,7 @@ package com.libreuml.backend.infrastructure.in.web.dto.response.project;
 
 import com.libreuml.backend.domain.model.ApiDiagramType;
 import com.libreuml.backend.domain.model.DiagramVisibility;
+import com.libreuml.backend.domain.model.ProjectKind;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +17,7 @@ public record ProjectSummaryResponse(
         String targetLanguage,
         String basePackage,
         DiagramVisibility visibility,
+        ProjectKind projectKind,
         long version,
         long diagramCount,
         List<ApiDiagramType> diagramTypes,

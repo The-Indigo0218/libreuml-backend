@@ -43,7 +43,8 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
                 command.author(),
                 command.projectVersion(),
                 command.targetLanguage(),
-                command.basePackage()
+                command.basePackage(),
+                command.projectKind()
         );
         Project saved = projectRepository.save(project);
 

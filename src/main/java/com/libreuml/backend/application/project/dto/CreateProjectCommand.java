@@ -1,5 +1,7 @@
 package com.libreuml.backend.application.project.dto;
 
+import com.libreuml.backend.domain.model.ProjectKind;
+
 import java.util.UUID;
 
 public record CreateProjectCommand(
@@ -9,5 +11,6 @@ public record CreateProjectCommand(
         String author,
         String projectVersion,
         String targetLanguage,
-        String basePackage
+        String basePackage,
+        ProjectKind projectKind
 ) {}

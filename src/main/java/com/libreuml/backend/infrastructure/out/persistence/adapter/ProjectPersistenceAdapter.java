@@ -67,6 +67,7 @@ public class ProjectPersistenceAdapter implements ProjectRepository {
                         e.getTargetLanguage(),
                         e.getBasePackage(),
                         e.getVisibility(),
+                        e.getProjectKind(),
                         e.getVersion(),
                         countByProject.getOrDefault(e.getId(), 0L),
                         typesByProject.getOrDefault(e.getId(), List.of()),
@@ -104,6 +105,7 @@ public class ProjectPersistenceAdapter implements ProjectRepository {
                 .targetLanguage(p.getTargetLanguage())
                 .basePackage(p.getBasePackage())
                 .visibility(p.getVisibility())
+                .projectKind(p.getProjectKind())
                 .version(p.getVersion())
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
@@ -121,6 +123,7 @@ public class ProjectPersistenceAdapter implements ProjectRepository {
                 .targetLanguage(e.getTargetLanguage())
                 .basePackage(e.getBasePackage())
                 .visibility(e.getVisibility())
+                .projectKind(e.getProjectKind())
                 .version(e.getVersion())
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())

@@ -1,6 +1,7 @@
 package com.libreuml.backend.infrastructure.out.persistence.entity;
 
 import com.libreuml.backend.domain.model.DiagramVisibility;
+import com.libreuml.backend.domain.model.ProjectKind;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,6 +45,10 @@ public class ProjectEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private DiagramVisibility visibility;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "project_kind", nullable = true)
+    private ProjectKind projectKind;
 
     @Version
     @Column(nullable = false)
