@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "diagrams")
+@Table(name = "legacy_diagrams")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -70,7 +70,7 @@ public class DiagramEntity {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
-            name = "diagram_collaborators",
+            name = "legacy_diagram_collaborators",
             joinColumns = @JoinColumn(name = "diagram_id")
     )
     @Column(name = "user_id")

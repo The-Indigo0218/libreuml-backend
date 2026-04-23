@@ -16,16 +16,28 @@ import com.libreuml.backend.application.courses.exception.CourseNotFoundExceptio
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
 import com.libreuml.backend.application.enrollment.exception.EnrollmentAlreadyExistsException;
+import com.libreuml.backend.application.project.exception.ProjectConflictException;
+import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
+import com.libreuml.backend.application.projectdiagram.exception.ProjectDiagramConflictException;
+import com.libreuml.backend.application.projectdiagram.exception.ProjectDiagramNotFoundException;
+import com.libreuml.backend.application.projectmodel.exception.ModelQuotaExceededException;
+import com.libreuml.backend.application.projectmodel.exception.ProjectModelConflictException;
+import com.libreuml.backend.application.projectmodel.exception.ProjectModelNotFoundException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
 import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
+import com.libreuml.backend.domain.model.exception.ProjectOwnershipException;
 import com.libreuml.backend.domain.model.exception.QuotaExceededException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.infrastructure.in.web.dto.response.ErrorResponse;
 import com.libreuml.backend.infrastructure.in.web.dto.response.FieldValidationError;
+import com.libreuml.backend.infrastructure.in.web.dto.response.project.ModelQuotaResponse;
+import com.libreuml.backend.infrastructure.in.web.dto.response.project.ProjectConflictResponse;
+import com.libreuml.backend.infrastructure.in.web.dto.response.project.ProjectDiagramConflictResponse;
+import com.libreuml.backend.infrastructure.in.web.dto.response.project.ProjectModelConflictResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -103,6 +115,24 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(ProjectNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProjectNotFound(
+            ProjectNotFoundException ex, HttpServletRequest req) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ProjectModelNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProjectModelNotFound(
+            ProjectModelNotFoundException ex, HttpServletRequest req) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ProjectDiagramNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProjectDiagramNotFound(
+            ProjectDiagramNotFoundException ex, HttpServletRequest req) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCourseNotFound(
             CourseNotFoundException ex, HttpServletRequest req) {
@@ -141,6 +171,12 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(ProjectOwnershipException.class)
+    public ResponseEntity<ErrorResponse> handleProjectOwnership(
+            ProjectOwnershipException ex, HttpServletRequest req) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(ApiKeyOwnershipException.class)
     public ResponseEntity<ErrorResponse> handleApiKeyOwnership(
             ApiKeyOwnershipException ex, HttpServletRequest req) {
@@ -173,10 +209,28 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.CONFLICT, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(ProjectConflictException.class)
+    public ResponseEntity<ProjectConflictResponse> handleProjectConflict(ProjectConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ProjectConflictResponse("CONFLICT", ex.getMessage(), ex.getServerVersion()));
+    }
+
+    @ExceptionHandler(ProjectModelConflictException.class)
+    public ResponseEntity<ProjectModelConflictResponse> handleProjectModelConflict(ProjectModelConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ProjectModelConflictResponse("CONFLICT", ex.getMessage(), ex.getServerVersion(), ex.getServerData()));
+    }
+
+    @ExceptionHandler(ProjectDiagramConflictException.class)
+    public ResponseEntity<ProjectDiagramConflictResponse> handleProjectDiagramConflict(ProjectDiagramConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ProjectDiagramConflictResponse("CONFLICT", ex.getMessage(), ex.getServerVersion()));
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleOptimisticLocking(
             ObjectOptimisticLockingFailureException ex, HttpServletRequest req) {
-        return error(HttpStatus.CONFLICT, "The diagram was modified by another request. Reload and retry.", req);
+        return error(HttpStatus.CONFLICT, "Resource was modified by another request. Reload and retry.", req);
     }
 
     // ── Unprocessable Entity (422) ────────────────────────────────────────────
@@ -192,6 +246,13 @@ public class GlobalControllerAdvice {
             QuotaExceededException ex, HttpServletRequest req) {
         metricsPort.incrementQuotaRejection();
         return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ModelQuotaExceededException.class)
+    public ResponseEntity<ModelQuotaResponse> handleModelQuotaExceeded(ModelQuotaExceededException ex) {
+        metricsPort.incrementQuotaRejection();
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ModelQuotaResponse("QUOTA_EXCEEDED", ex.getMessage(), ex.getUsed(), ex.getQuota()));
     }
 
     @ExceptionHandler(RedemptionLimitExceededException.class)
