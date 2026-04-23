@@ -27,9 +27,10 @@ public class StorageQuotaService implements GetStorageQuotaUseCase {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
         long quota = user.getStorageQuotaBytes();
+        long legacyDiagramBytes = user.getStorageUsedBytes();
         long modelsBytes = projectModelRepository.getTotalModelDataBytesByOwner(userId);
         long diagramsBytes = projectDiagramRepository.getTotalViewDataBytesByOwner(userId);
-        long used = modelsBytes + diagramsBytes;
+        long used = legacyDiagramBytes + modelsBytes + diagramsBytes;
 
         return new QuotaInfo(quota, used, quota - used, modelsBytes, diagramsBytes);
     }

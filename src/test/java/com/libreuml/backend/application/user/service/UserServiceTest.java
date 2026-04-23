@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.user.service;
 
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
@@ -48,6 +49,9 @@ class UserServiceTest {
     private UserMapper userMapper;
     @Mock
     private MetricsPort metricsPort;
+
+    @Mock
+    private AuditLogPort auditLogPort;
 
     @InjectMocks
     private UserService userService;

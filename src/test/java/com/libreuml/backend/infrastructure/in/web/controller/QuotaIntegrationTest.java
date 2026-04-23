@@ -67,6 +67,7 @@ class QuotaIntegrationTest extends AbstractIntegrationTest {
         String email = "quota-owner-" + id + "@libreuml.io";
 
         register(email, ownerIp);
+        verifyEmail(email, ownerIp);
         ownerCookies = login(email, ownerIp);
     }
 

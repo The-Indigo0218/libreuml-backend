@@ -2,6 +2,11 @@ jwt:
   secret: TGlicmVVTUxUZXN0U2VjcmV0VGhhdElzVmVyeUxvbmdBbmRTZWN1cmVBbmRDb250YWluc0F0TGVhc3Q2NEJ5dGVzT2ZEYXRhU29JdFBhc3Nlc1ZhbGlkYXRpb25FYXNpbHk=
   expiration: 86400000
 
+spring:
+  mail:
+    host: localhost
+    port: 3025
+
 app:
   admin:
     email: test@test.com
@@ -9,10 +14,23 @@ app:
   cors:
     allowed-origins:
       - "http://localhost:test"
+  frontend:
+    url: http://localhost:5173
+  mail:
+    from: noreply@test.libreuml.io
+  oauth:
+    github:
+      client-id: ""
+      client-secret: ""
+    google:
+      client-id: ""
+      client-secret: ""
 
-# Disable span sampling and OTLP export during tests to prevent connection attempts
-# to a non-existent collector and keep test output clean.
+# Disable span sampling, OTLP export, and mail health check during tests.
 management:
+  health:
+    mail:
+      enabled: false
   tracing:
     sampling:
       probability: 0.0
