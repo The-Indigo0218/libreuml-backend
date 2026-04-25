@@ -2,6 +2,11 @@ spring:
   application:
     name: libreuml-backend
 
+  servlet:
+    multipart:
+      max-request-size: 6MB
+      max-file-size: 6MB
+
   jackson:
     serialization:
       write-dates-as-timestamps: false

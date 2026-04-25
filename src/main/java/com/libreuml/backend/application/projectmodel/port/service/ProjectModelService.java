@@ -3,9 +3,11 @@ package com.libreuml.backend.application.projectmodel.port.service;
 import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectmodel.dto.UpdateProjectModelCommand;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.projectmodel.exception.ModelQuotaExceededException;
 import com.libreuml.backend.application.projectmodel.exception.ProjectModelConflictException;
 import com.libreuml.backend.application.projectmodel.exception.ProjectModelNotFoundException;
+import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
 import com.libreuml.backend.application.projectmodel.port.in.GetProjectModelUseCase;
 import com.libreuml.backend.application.projectmodel.port.in.UpdateProjectModelUseCase;
 import com.libreuml.backend.application.projectmodel.port.out.ProjectModelRepository;
@@ -25,6 +27,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class ProjectModelService implements GetProjectModelUseCase, UpdateProjectModelUseCase {
+
+    private static final long MAX_MODEL_DATA_BYTES = 5_242_880L; // 5 MB
 
     private final ProjectModelRepository projectModelRepository;
     private final ProjectRepository projectRepository;
@@ -59,10 +63,19 @@ public class ProjectModelService implements GetProjectModelUseCase, UpdateProjec
 
         User user = userRepository.getUserById(command.requesterId())
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + command.requesterId()));
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email verification required to update cloud models.");
+        }
 
         long newModelBytes = command.data() != null
                 ? command.data().toString().getBytes(StandardCharsets.UTF_8).length
                 : 0L;
+
+        if (newModelBytes > MAX_MODEL_DATA_BYTES) {
+            throw new DiagramPayloadTooLargeException(
+                    "Model data exceeds the 5 MB limit (" + newModelBytes + " bytes received).");
+        }
+
         long currentModelBytes = projectModelRepository.getModelDataBytesByProjectId(command.projectId());
         long delta = newModelBytes - currentModelBytes;
 

@@ -45,6 +45,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -235,6 +236,12 @@ public class GlobalControllerAdvice {
     }
 
     // ── Unprocessable Entity (422) ────────────────────────────────────────────
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex, HttpServletRequest req) {
+        return error(HttpStatus.PAYLOAD_TOO_LARGE, "Request payload exceeds the maximum allowed size.", req);
+    }
 
     @ExceptionHandler(DiagramPayloadTooLargeException.class)
     public ResponseEntity<ErrorResponse> handleDiagramPayloadTooLarge(

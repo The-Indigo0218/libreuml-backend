@@ -10,12 +10,16 @@ import com.libreuml.backend.application.project.port.in.CreateProjectUseCase;
 import com.libreuml.backend.application.project.port.in.DeleteProjectUseCase;
 import com.libreuml.backend.application.project.port.in.GetProjectUseCase;
 import com.libreuml.backend.application.project.port.in.UpdateProjectUseCase;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectdiagram.port.out.ProjectDiagramRepository;
 import com.libreuml.backend.application.projectmodel.port.out.ProjectModelRepository;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectDiagram;
 import com.libreuml.backend.domain.model.ProjectModel;
+import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.domain.model.exception.ProjectOwnershipException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,9 +37,16 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
     private final ProjectRepository projectRepository;
     private final ProjectModelRepository projectModelRepository;
     private final ProjectDiagramRepository projectDiagramRepository;
+    private final UserRepository userRepository;
 
     @Override
     public CreatedProject create(CreateProjectCommand command) {
+        User user = userRepository.getUserById(command.ownerId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.ownerId()));
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email verification required to create cloud projects.");
+        }
+
         Project project = Project.create(
                 command.ownerId(),
                 command.name(),

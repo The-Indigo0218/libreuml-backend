@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.projectdiagram.port.service;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectdiagram.dto.CreateProjectDiagramCommand;
@@ -11,12 +12,19 @@ import com.libreuml.backend.application.projectdiagram.port.in.DeleteProjectDiag
 import com.libreuml.backend.application.projectdiagram.port.in.GetProjectDiagramUseCase;
 import com.libreuml.backend.application.projectdiagram.port.in.UpdateProjectDiagramUseCase;
 import com.libreuml.backend.application.projectdiagram.port.out.ProjectDiagramRepository;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
+import com.libreuml.backend.application.projectmodel.exception.ModelQuotaExceededException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectDiagram;
+import com.libreuml.backend.domain.model.User;
+import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,14 +34,33 @@ import java.util.UUID;
 public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetProjectDiagramUseCase,
         UpdateProjectDiagramUseCase, DeleteProjectDiagramUseCase {
 
+    private static final long MAX_VIEW_DATA_BYTES = 5_242_880L; // 5 MB
+
     private final ProjectDiagramRepository projectDiagramRepository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
     @Override
     public ProjectDiagram create(CreateProjectDiagramCommand command) {
         Project project = projectRepository.findById(command.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found: " + command.projectId()));
         project.assertOwner(command.requesterId());
+
+        long viewDataBytes = sizeOf(command.viewData());
+        assertPayloadSize(viewDataBytes);
+
+        User user = userRepository.getUserById(command.requesterId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.requesterId()));
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email verification required to create cloud diagrams.");
+        }
+
+        if (!user.hasQuotaFor(viewDataBytes)) {
+            throw new ModelQuotaExceededException(
+                    "Storage quota exceeded.",
+                    user.getStorageUsedBytes() + viewDataBytes,
+                    user.getStorageQuotaBytes());
+        }
 
         ProjectDiagram diagram = ProjectDiagram.create(
                 command.projectId(),
@@ -42,7 +69,14 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
                 command.path(),
                 command.viewData()
         );
-        return projectDiagramRepository.save(diagram);
+        ProjectDiagram saved = projectDiagramRepository.save(diagram);
+
+        if (viewDataBytes > 0) {
+            user.incrementUsage(viewDataBytes);
+            userRepository.save(user);
+        }
+
+        return saved;
     }
 
     @Override
@@ -79,6 +113,32 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
                     diagram.getVersion());
         }
 
+        long newBytes = sizeOf(command.viewData());
+        assertPayloadSize(newBytes);
+
+        User user = userRepository.getUserById(command.requesterId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.requesterId()));
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email verification required to update cloud diagrams.");
+        }
+
+        long currentBytes = sizeOf(diagram.getViewData());
+        long delta = newBytes - currentBytes;
+
+        if (delta > 0) {
+            if (!user.hasQuotaFor(delta)) {
+                throw new ModelQuotaExceededException(
+                        "Storage quota exceeded.",
+                        user.getStorageUsedBytes() + delta,
+                        user.getStorageQuotaBytes());
+            }
+            user.incrementUsage(delta);
+            userRepository.save(user);
+        } else if (delta < 0) {
+            user.decrementUsage(-delta);
+            userRepository.save(user);
+        }
+
         diagram.update(command.name(), command.viewData());
         ProjectDiagram saved = projectDiagramRepository.save(diagram);
 
@@ -93,9 +153,29 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found: " + projectId));
         project.assertOwner(requesterId);
 
-        projectDiagramRepository.findByProjectIdAndId(projectId, diagramId)
+        ProjectDiagram diagram = projectDiagramRepository.findByProjectIdAndId(projectId, diagramId)
                 .orElseThrow(() -> new ProjectDiagramNotFoundException("Diagram not found: " + diagramId));
 
+        long freedBytes = sizeOf(diagram.getViewData());
         projectDiagramRepository.deleteById(diagramId);
+
+        if (freedBytes > 0) {
+            userRepository.getUserById(requesterId).ifPresent(user -> {
+                user.decrementUsage(freedBytes);
+                userRepository.save(user);
+            });
+        }
+    }
+
+    private static long sizeOf(ObjectNode node) {
+        if (node == null) return 0L;
+        return node.toString().getBytes(StandardCharsets.UTF_8).length;
+    }
+
+    private static void assertPayloadSize(long bytes) {
+        if (bytes > MAX_VIEW_DATA_BYTES) {
+            throw new DiagramPayloadTooLargeException(
+                    "Diagram view data exceeds the 5 MB limit (" + bytes + " bytes received).");
+        }
     }
 }

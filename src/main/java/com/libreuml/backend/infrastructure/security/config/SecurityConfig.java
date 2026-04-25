@@ -54,10 +54,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/oauth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        // Actuator: liveness/readiness probes and Prometheus scraping are unauthenticated.
-                        // All other management endpoints (/internal/metrics, /internal/info) require auth.
+                        // Actuator: liveness/readiness probes are public for Kubernetes health checks.
+                        // Prometheus scraping requires ADMIN to prevent metric reconnaissance.
                         .requestMatchers("/internal/health/**").permitAll()
-                        .requestMatchers("/internal/prometheus").permitAll()
+                        .requestMatchers("/internal/prometheus").hasRole("ADMIN")
                         // OpenAPI / Swagger UI: documentation endpoints are public (no sensitive data).
                         // springdoc serves the UI at /api/docs and the JSON spec at /api/api-docs.
                         .requestMatchers("/api/docs/**", "/api/docs.html").permitAll()
@@ -141,8 +141,16 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
+        for (String origin : allowedOrigins) {
+            if (origin.contains("*")) {
+                throw new IllegalStateException(
+                        "Wildcard CORS origin rejected: '" + origin + "'. " +
+                        "Set app.cors.allowed-origins to explicit origins only.");
+            }
+        }
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(allowedOrigins);
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

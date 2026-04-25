@@ -6,7 +6,6 @@ import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
 import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
-import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.application.user.port.in.dto.LoginCommand;
 import com.libreuml.backend.application.user.port.out.PasswordEncoderPort;
@@ -50,14 +49,14 @@ public class AuthService implements LoginWithRefreshUseCase {
             metricsPort.incrementFailedLogin();
             auditLogPort.log(AuditEventType.USER_LOGIN_FAILED, null, ipAddress, userAgent,
                     "{\"reason\":\"user_not_found\"}");
-            throw new UserNotFoundException("User not found");
+            throw new IncorrectPasswordException("Invalid credentials");
         }
 
         if (!passwordEncoder.matches(command.password(), user.getPassword())) {
             metricsPort.incrementFailedLogin();
             auditLogPort.log(AuditEventType.USER_LOGIN_FAILED, user.getId(), ipAddress, userAgent,
                     "{\"reason\":\"wrong_password\"}");
-            throw new IncorrectPasswordException("Incorrect password");
+            throw new IncorrectPasswordException("Invalid credentials");
         }
 
         metricsPort.incrementActiveUsersDaily("credential");
