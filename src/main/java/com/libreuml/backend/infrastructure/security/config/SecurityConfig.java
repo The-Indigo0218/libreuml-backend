@@ -77,6 +77,12 @@ public class SecurityConfig {
                                 .maxAgeInSeconds(63072000)
                         )
                         .cacheControl(Customizer.withDefaults())
+                        .addHeaderWriter((req, res) -> {
+                            res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+                            res.setHeader("Permissions-Policy", "geolocation=(), camera=(), microphone=()");
+                            res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+                            res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+                        })
                 )
                 // Both filters are registered at order 799 (one slot before UPAF = 800).
                 // Filters at the same order run in insertion order — apiKey is added first,
