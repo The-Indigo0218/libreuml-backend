@@ -16,5 +16,6 @@ public record ErrorResponse(
         String message,
         Instant timestamp,
         String path,
-        List<FieldValidationError> errors
+        List<FieldValidationError> errors,
+        String code
 ) {}

@@ -15,6 +15,7 @@ import com.libreuml.backend.infrastructure.in.web.dto.request.diagram.UpdateDiag
 import com.libreuml.backend.infrastructure.in.web.dto.response.diagram.DiagramResponse;
 import com.libreuml.backend.infrastructure.in.web.dto.response.diagram.DiagramSummaryResponse;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -33,11 +34,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DiagramController {
 
+    private static final String DEPRECATION_SUNSET = "Sat, 01 Aug 2026 00:00:00 GMT";
+
     private final CreateDiagramUseCase createDiagramUseCase;
     private final GetDiagramUseCase getDiagramUseCase;
     private final UpdateDiagramUseCase updateDiagramUseCase;
     private final DeleteDiagramUseCase deleteDiagramUseCase;
     private final ObjectMapper objectMapper;
+
+    @ModelAttribute
+    public void addDeprecationHeaders(HttpServletResponse response) {
+        response.setHeader("Deprecation", "true");
+        response.setHeader("Sunset", DEPRECATION_SUNSET);
+        response.setHeader("Link", "</api/v1/projects>; rel=\"successor-version\"");
+    }
 
     @PostMapping
     public ResponseEntity<DiagramResponse> create(

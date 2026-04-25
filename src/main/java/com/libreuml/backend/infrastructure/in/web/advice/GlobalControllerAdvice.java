@@ -68,7 +68,7 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ErrorResponse> handleEmailNotVerified(
             EmailNotVerifiedException ex, HttpServletRequest req) {
-        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), "EMAIL_NOT_VERIFIED", req);
     }
 
     @ExceptionHandler(EmailAlreadyVerifiedException.class)
@@ -94,7 +94,7 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(IncorrectPasswordException.class)
     public ResponseEntity<ErrorResponse> handleIncorrectPassword(
             IncorrectPasswordException ex, HttpServletRequest req) {
-        return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), req);
+        return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_CREDENTIALS", req);
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
@@ -170,13 +170,13 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(DiagramOwnershipException.class)
     public ResponseEntity<ErrorResponse> handleDiagramOwnership(
             DiagramOwnershipException ex, HttpServletRequest req) {
-        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), "OWNERSHIP_DENIED", req);
     }
 
     @ExceptionHandler(ProjectOwnershipException.class)
     public ResponseEntity<ErrorResponse> handleProjectOwnership(
             ProjectOwnershipException ex, HttpServletRequest req) {
-        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), "OWNERSHIP_DENIED", req);
     }
 
     @ExceptionHandler(ApiKeyOwnershipException.class)
@@ -240,13 +240,13 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
             MaxUploadSizeExceededException ex, HttpServletRequest req) {
-        return error(HttpStatus.PAYLOAD_TOO_LARGE, "Request payload exceeds the maximum allowed size.", req);
+        return error(HttpStatus.PAYLOAD_TOO_LARGE, "Request payload exceeds the maximum allowed size.", "PAYLOAD_TOO_LARGE", req);
     }
 
     @ExceptionHandler(DiagramPayloadTooLargeException.class)
     public ResponseEntity<ErrorResponse> handleDiagramPayloadTooLarge(
             DiagramPayloadTooLargeException ex, HttpServletRequest req) {
-        return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), req);
+        return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), "PAYLOAD_TOO_LARGE", req);
     }
 
     @ExceptionHandler(QuotaExceededException.class)
@@ -297,7 +297,8 @@ public class GlobalControllerAdvice {
                 "Validation failed",
                 Instant.now(),
                 req.getRequestURI(),
-                errors));
+                errors,
+                "VALIDATION_FAILED"));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -315,7 +316,8 @@ public class GlobalControllerAdvice {
                 "Validation failed",
                 Instant.now(),
                 req.getRequestURI(),
-                errors));
+                errors,
+                "VALIDATION_FAILED"));
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -356,12 +358,17 @@ public class GlobalControllerAdvice {
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private ResponseEntity<ErrorResponse> error(HttpStatus status, String message, HttpServletRequest req) {
+        return error(status, message, null, req);
+    }
+
+    private ResponseEntity<ErrorResponse> error(HttpStatus status, String message, String code, HttpServletRequest req) {
         return ResponseEntity.status(status).body(new ErrorResponse(
                 status.value(),
                 status.getReasonPhrase(),
                 message,
                 Instant.now(),
                 req.getRequestURI(),
-                null));
+                null,
+                code));
     }
 }
