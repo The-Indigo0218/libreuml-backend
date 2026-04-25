@@ -22,4 +22,17 @@ public class RefreshToken {
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }
+
+    public RefreshToken revoke() {
+        return RefreshToken.builder()
+                .id(this.id)
+                .userId(this.userId)
+                .tokenHash(this.tokenHash)
+                .issuedAt(this.issuedAt)
+                .expiresAt(this.expiresAt)
+                .revoked(true)
+                .ipAddress(this.ipAddress)
+                .userAgent(this.userAgent)
+                .build();
+    }
 }

@@ -16,6 +16,7 @@ import com.libreuml.backend.infrastructure.in.web.dto.request.auth.RegisterReque
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ResetPasswordRequest;
 import com.libreuml.backend.infrastructure.in.web.mapper.AuthWebMapper;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
+import com.libreuml.backend.infrastructure.in.web.filter.TrustedProxyResolver;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,6 +41,7 @@ public class AuthController {
     private final ConfirmEmailUseCase confirmEmailUseCase;
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final TrustedProxyResolver trustedProxyResolver;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest request) {
@@ -119,10 +121,6 @@ public class AuthController {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        return trustedProxyResolver.resolveClientIp(request);
     }
 }

@@ -54,7 +54,8 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         User user = userRepository.getUserById(existing.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found for refresh token"));
 
-        refreshTokenRepository.deleteById(existing.getId());
+        // Mark as revoked (not deleted) so that a replayed rotation can still be detected.
+        refreshTokenRepository.save(existing.revoke());
 
         String accessToken = tokenProvider.generateToken(user);
         String rawRefreshToken = generateOpaqueToken();

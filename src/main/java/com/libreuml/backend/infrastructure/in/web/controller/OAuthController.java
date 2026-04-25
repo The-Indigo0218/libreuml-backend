@@ -7,7 +7,10 @@ import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.auth.port.in.OAuthAuthorizeUseCase;
 import com.libreuml.backend.application.auth.port.in.OAuthLoginUseCase;
 import com.libreuml.backend.infrastructure.in.web.dto.response.auth.OAuthAuthorizeResponse;
+import com.libreuml.backend.infrastructure.in.web.filter.TrustedProxyResolver;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +25,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OAuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(OAuthController.class);
+
     private final OAuthAuthorizeUseCase oAuthAuthorizeUseCase;
     private final OAuthLoginUseCase oAuthLoginUseCase;
     private final CookieTokenStrategy cookieTokenStrategy;
+    private final TrustedProxyResolver trustedProxyResolver;
 
     @Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
@@ -69,24 +75,31 @@ public class OAuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        OAuthProvider oAuthProvider = parseProvider(provider);
+        try {
+            OAuthProvider oAuthProvider = parseProvider(provider);
 
-        var command = new OAuthCallbackCommand(
-                code,
-                state,
-                buildCallbackUri(request, provider),
-                oAuthProvider,
-                resolveClientIp(request),
-                request.getHeader("User-Agent")
-        );
+            var command = new OAuthCallbackCommand(
+                    code,
+                    state,
+                    buildCallbackUri(request, provider),
+                    oAuthProvider,
+                    resolveClientIp(request),
+                    request.getHeader("User-Agent")
+            );
 
-        TokenPair tokens = oAuthLoginUseCase.login(command);
-        cookieTokenStrategy.setAccessTokenCookie(response, tokens.accessToken());
-        cookieTokenStrategy.setRefreshTokenCookie(response, tokens.rawRefreshToken());
+            TokenPair tokens = oAuthLoginUseCase.login(command);
+            cookieTokenStrategy.setAccessTokenCookie(response, tokens.accessToken());
+            cookieTokenStrategy.setRefreshTokenCookie(response, tokens.rawRefreshToken());
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.LOCATION, frontendUrl)
-                .build();
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, frontendUrl)
+                    .build();
+        } catch (OAuthException ex) {
+            log.warn("OAuth callback failed for provider '{}': {}", provider, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, frontendUrl + "/auth/error?reason=oauth_error")
+                    .build();
+        }
     }
 
     private OAuthProvider parseProvider(String provider) {
@@ -104,10 +117,6 @@ public class OAuthController {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        return trustedProxyResolver.resolveClientIp(request);
     }
 }

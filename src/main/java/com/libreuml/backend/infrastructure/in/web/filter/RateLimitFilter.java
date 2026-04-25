@@ -13,6 +13,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,10 +26,13 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Order(1)
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final int REQUESTS_PER_MINUTE = 10;
     private static final String AUTH_PATH_PREFIX = "/api/v1/auth/";
+
+    private final TrustedProxyResolver trustedProxyResolver;
 
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .expireAfterWrite(2, TimeUnit.MINUTES)
@@ -45,7 +50,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = resolveClientIp(request);
+        String clientIp = trustedProxyResolver.resolveClientIp(request);
         Bucket bucket = buckets.get(clientIp, ip -> buildBucket());
 
         if (bucket.tryConsume(1)) {
@@ -61,14 +66,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 Refill.intervally(REQUESTS_PER_MINUTE, Duration.ofMinutes(1))
         );
         return Bucket.builder().addLimit(limit).build();
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 
     private void writeTooManyRequests(HttpServletRequest request, HttpServletResponse response) throws IOException {
