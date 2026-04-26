@@ -8,6 +8,10 @@ import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.apikey.port.out.ApiKeyRepository;
+import com.libreuml.backend.application.auth.dto.OAuthProvider;
+import com.libreuml.backend.application.user.port.in.DeleteAccountUseCase;
+import com.libreuml.backend.application.user.port.in.UnlinkOAuthUseCase;
 import com.libreuml.backend.application.user.port.in.UpdateUserUseCase;
 import com.libreuml.backend.application.user.port.in.dto.*;
 import com.libreuml.backend.application.user.port.mapper.UserFactory;
@@ -27,7 +31,8 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseCase, UpdateUserUseCase {
+public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseCase, UpdateUserUseCase,
+        DeleteAccountUseCase, UnlinkOAuthUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoderPort passwordEncoder;
@@ -36,6 +41,7 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
     private final UserMapper userMapper;
     private final MetricsPort metricsPort;
     private final AuditLogPort auditLogPort;
+    private final ApiKeyRepository apiKeyRepository;
 
     @Override
     public User create(CreateUserCommand command) {
@@ -155,5 +161,28 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
 
     private String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
+    }
+
+    @Override
+    public void deleteAccount(UUID userId) {
+        User user = getUserOrThrow(userId);
+        apiKeyRepository.findAllByUserId(userId)
+                .forEach(key -> apiKeyRepository.deleteById(key.getId()));
+        userRepository.deleteById(userId);
+        auditLogPort.log(AuditEventType.USER_ACCOUNT_DELETED, null, null, null,
+                "{\"deletedUserId\":\"" + userId + "\"}");
+    }
+
+    @Override
+    public User unlinkOAuth(UUID userId, OAuthProvider provider) {
+        User user = getUserOrThrow(userId);
+        switch (provider) {
+            case GITHUB -> user.unlinkGithub();
+            case GOOGLE -> user.unlinkGoogle();
+        }
+        User saved = userRepository.save(user);
+        auditLogPort.log(AuditEventType.OAUTH_UNLINKED, userId, null, null,
+                "{\"provider\":\"" + provider.name().toLowerCase() + "\"}");
+        return saved;
     }
 }

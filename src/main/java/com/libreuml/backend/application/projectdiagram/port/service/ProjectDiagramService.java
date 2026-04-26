@@ -1,6 +1,7 @@
 package com.libreuml.backend.application.projectdiagram.port.service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectdiagram.dto.CreateProjectDiagramCommand;
@@ -16,6 +17,7 @@ import com.libreuml.backend.application.emailverification.exception.EmailNotVeri
 import com.libreuml.backend.application.projectmodel.exception.ModelQuotaExceededException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectDiagram;
 import com.libreuml.backend.domain.model.User;
@@ -39,6 +41,7 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
     private final ProjectDiagramRepository projectDiagramRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final AuditLogPort auditLogPort;
 
     @Override
     public ProjectDiagram create(CreateProjectDiagramCommand command) {
@@ -75,6 +78,9 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
             user.incrementUsage(viewDataBytes);
             userRepository.save(user);
         }
+
+        auditLogPort.log(AuditEventType.DIAGRAM_CREATED, command.requesterId(), null, null,
+                "{\"projectId\":\"" + command.projectId() + "\",\"diagramId\":\"" + saved.getId() + "\"}");
 
         return saved;
     }
@@ -144,6 +150,9 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
 
         projectRepository.touchUpdatedAt(command.projectId());
 
+        auditLogPort.log(AuditEventType.DIAGRAM_UPDATED, command.requesterId(), null, null,
+                "{\"projectId\":\"" + command.projectId() + "\",\"diagramId\":\"" + command.diagramId() + "\"}");
+
         return saved;
     }
 
@@ -165,6 +174,9 @@ public class ProjectDiagramService implements CreateProjectDiagramUseCase, GetPr
                 userRepository.save(user);
             });
         }
+
+        auditLogPort.log(AuditEventType.DIAGRAM_DELETED, requesterId, null, null,
+                "{\"projectId\":\"" + projectId + "\",\"diagramId\":\"" + diagramId + "\"}");
     }
 
     private static long sizeOf(ObjectNode node) {

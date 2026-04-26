@@ -10,12 +10,14 @@ import com.libreuml.backend.application.project.port.in.CreateProjectUseCase;
 import com.libreuml.backend.application.project.port.in.DeleteProjectUseCase;
 import com.libreuml.backend.application.project.port.in.GetProjectUseCase;
 import com.libreuml.backend.application.project.port.in.UpdateProjectUseCase;
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectdiagram.port.out.ProjectDiagramRepository;
 import com.libreuml.backend.application.projectmodel.port.out.ProjectModelRepository;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectDiagram;
 import com.libreuml.backend.domain.model.ProjectModel;
@@ -38,6 +40,7 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
     private final ProjectModelRepository projectModelRepository;
     private final ProjectDiagramRepository projectDiagramRepository;
     private final UserRepository userRepository;
+    private final AuditLogPort auditLogPort;
 
     @Override
     public CreatedProject create(CreateProjectCommand command) {
@@ -61,6 +64,9 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
 
         ProjectModel model = ProjectModel.createEmpty(saved.getId());
         ProjectModel savedModel = projectModelRepository.save(model);
+
+        auditLogPort.log(AuditEventType.PROJECT_CREATED, command.ownerId(), null, null,
+                "{\"projectId\":\"" + saved.getId() + "\"}");
 
         return new CreatedProject(saved, savedModel);
     }
@@ -118,7 +124,10 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
                 command.requesterId()
         );
 
-        return projectRepository.save(project);
+        Project saved = projectRepository.save(project);
+        auditLogPort.log(AuditEventType.PROJECT_UPDATED, command.requesterId(), null, null,
+                "{\"projectId\":\"" + command.projectId() + "\"}");
+        return saved;
     }
 
     @Override
@@ -127,5 +136,7 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found: " + projectId));
         project.assertOwner(requesterId);
         projectRepository.deleteById(projectId);
+        auditLogPort.log(AuditEventType.PROJECT_DELETED, requesterId, null, null,
+                "{\"projectId\":\"" + projectId + "\"}");
     }
 }

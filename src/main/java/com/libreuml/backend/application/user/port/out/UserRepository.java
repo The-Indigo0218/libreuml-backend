@@ -33,4 +33,6 @@ public interface UserRepository {
     Optional<User> findByGoogleId(String googleId);
 
     long sumStorageUsedBytes();
+
+    void deleteById(UUID id);
 }

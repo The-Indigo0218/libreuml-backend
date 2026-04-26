@@ -109,4 +109,9 @@ public class UserPersistenceAdapter implements UserRepository {
                 page.isLast()
         );
     }
+
+    @Override
+    public void deleteById(UUID id) {
+        springDataUserRepository.deleteById(id);
+    }
 }

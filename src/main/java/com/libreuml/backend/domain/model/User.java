@@ -79,4 +79,12 @@ public abstract class User {
         this.googleId = googleId;
     }
 
+    public void unlinkGithub() {
+        this.githubId = null;
+    }
+
+    public void unlinkGoogle() {
+        this.googleId = null;
+    }
+
 }

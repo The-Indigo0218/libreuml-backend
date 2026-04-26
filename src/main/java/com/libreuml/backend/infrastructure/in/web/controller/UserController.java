@@ -1,6 +1,9 @@
 package com.libreuml.backend.infrastructure.in.web.controller;
 
+import com.libreuml.backend.application.auth.dto.OAuthProvider;
 import com.libreuml.backend.application.auth.port.in.SessionUseCase;
+import com.libreuml.backend.application.user.port.in.DeleteAccountUseCase;
+import com.libreuml.backend.application.user.port.in.UnlinkOAuthUseCase;
 import com.libreuml.backend.application.user.port.in.dto.ChangePasswordCommand;
 import com.libreuml.backend.application.user.port.in.dto.UpdateEmailCommand;
 import com.libreuml.backend.application.user.port.in.dto.UpdateSocialProfileCommand;
@@ -31,6 +34,8 @@ public class UserController {
     private final UserService userService;
     private final UserWebMapper userWebMapper;
     private final SessionUseCase sessionUseCase;
+    private final DeleteAccountUseCase deleteAccountUseCase;
+    private final UnlinkOAuthUseCase unlinkOAuthUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -90,6 +95,27 @@ public class UserController {
             @PathVariable UUID id,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         sessionUseCase.revokeSession(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        deleteAccountUseCase.deleteAccount(userDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me/oauth/{provider}")
+    public ResponseEntity<Void> unlinkOAuth(
+            @PathVariable String provider,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        OAuthProvider oAuthProvider;
+        try {
+            oAuthProvider = OAuthProvider.valueOf(provider.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+        unlinkOAuthUseCase.unlinkOAuth(userDetails.getId(), oAuthProvider);
         return ResponseEntity.noContent().build();
     }
 }

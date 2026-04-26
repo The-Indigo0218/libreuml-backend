@@ -3,6 +3,7 @@ package com.libreuml.backend.application.projectmodel.port.service;
 import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
 import com.libreuml.backend.application.project.port.out.ProjectRepository;
 import com.libreuml.backend.application.projectmodel.dto.UpdateProjectModelCommand;
+import com.libreuml.backend.application.audit.port.out.AuditLogPort;
 import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
 import com.libreuml.backend.application.projectmodel.exception.ModelQuotaExceededException;
 import com.libreuml.backend.application.projectmodel.exception.ProjectModelConflictException;
@@ -13,6 +14,7 @@ import com.libreuml.backend.application.projectmodel.port.in.UpdateProjectModelU
 import com.libreuml.backend.application.projectmodel.port.out.ProjectModelRepository;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.domain.model.AuditEventType;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectModel;
 import com.libreuml.backend.domain.model.User;
@@ -33,6 +35,7 @@ public class ProjectModelService implements GetProjectModelUseCase, UpdateProjec
     private final ProjectModelRepository projectModelRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final AuditLogPort auditLogPort;
 
     @Override
     @Transactional(readOnly = true)
@@ -101,6 +104,9 @@ public class ProjectModelService implements GetProjectModelUseCase, UpdateProjec
         }
 
         projectRepository.touchUpdatedAt(command.projectId());
+
+        auditLogPort.log(AuditEventType.MODEL_UPDATED, command.requesterId(), null, null,
+                "{\"projectId\":\"" + command.projectId() + "\"}");
 
         return saved;
     }
