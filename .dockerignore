@@ -1,0 +1,17 @@
+.git
+.gitignore
+.idea
+.vscode
+.claude
+target/
+*.md
+HELP.md
+STRUCTURE.md
+CHANGELOG-*.md
+.env
+.env.*
+!.env.example
+docs/
+doc/
+endpoints/
+folder.bru

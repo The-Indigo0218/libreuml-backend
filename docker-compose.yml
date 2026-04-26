@@ -1,25 +1,44 @@
 services:
+
+  # ── Application ──────────────────────────────────────────────────────────────
   api:
     build: .
-    restart: always
+    restart: unless-stopped
     ports:
       - "8080:8080"
+    env_file: .env
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME:-libreumldb}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER:-postgres}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      # Database — override to reach the db service by its Docker hostname
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-libreumldb}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+
+      # Mail — point to the internal Mailpit SMTP server
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
+      SMTP_AUTH: "false"
+      SMTP_STARTTLS: "false"
     depends_on:
       db:
         condition: service_healthy
+      mail:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/internal/health/liveness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    restart: always
+    restart: unless-stopped
     environment:
-      - POSTGRES_DB=${DB_NAME:-libreumldb}
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-libreumldb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
     ports:
       - "5432:5432"
     volumes:
@@ -28,7 +47,15 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-libreumldb}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  # ── Mail (Mailpit) ────────────────────────────────────────────────────────────
+  # SMTP on port 1025 (internal), web UI on http://localhost:8025
+  mail:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # Web UI — inspect all outgoing emails here
 
 volumes:
   db_data:
