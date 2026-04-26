@@ -29,7 +29,7 @@ import java.util.UUID;
  * </ul>
  */
 @RestController
-@RequestMapping("/api/v1/users/me")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ApiKeyController {
 
@@ -68,7 +68,7 @@ public class ApiKeyController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/redeem-partner-code")
+    @PostMapping("/users/me/redeem-partner-code")
     public ResponseEntity<CreatedApiKeyResponse> redeemPartnerCode(
             @RequestBody @Valid RedeemPartnerCodeRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {

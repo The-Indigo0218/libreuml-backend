@@ -5,12 +5,14 @@ import java.util.UUID;
 
 public record ReportResponse(
         UUID id,
+        String type,
         String title,
         String description,
         String status,
         String priority,
         String adminResponse,
         LocalDateTime resolvedAt,
-        LocalDateTime createdAt
-        ) {
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {
 }

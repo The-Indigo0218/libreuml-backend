@@ -37,13 +37,13 @@ public class ReportController {
     private final ReportWebMapper reportWebMapper;
 
     @PostMapping
-    public ResponseEntity<Void> createReport(
+    public ResponseEntity<ReportResponse> createReport(
             @RequestBody @Valid CreateReportRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         CreateReportCommand command = reportWebMapper.toCreateReportCommand(request, userDetails.getId());
-        reportService.createReport(command);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Report created = reportService.createReport(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reportWebMapper.toResponse(created));
     }
 
     @GetMapping("/my")

@@ -13,5 +13,5 @@ public record CreateReportRequest(
         String title,
         @NotBlank
         String description,
-        Set<String> evidencesImages) {
+        Set<String> evidenceImages) {
 }

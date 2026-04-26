@@ -54,6 +54,9 @@ public class ReportEntity {
     @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     private LocalDateTime solvedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)

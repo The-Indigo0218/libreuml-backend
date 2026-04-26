@@ -24,6 +24,7 @@ public interface ReportWebMapper {
 
     @Mapping(target = "userId", source = "userId")
     @Mapping(target = "type", source = "request.type", qualifiedByName = "ValidateReportType")
+    @Mapping(target = "evidencesImages", source = "request.evidenceImages")
     CreateReportCommand toCreateReportCommand(CreateReportRequest request, UUID userId);
 
     @Mapping(target = "id", source = "id")
@@ -64,10 +65,12 @@ public interface ReportWebMapper {
         try {
             return ReportType.valueOf(reportType.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid Report Type. Allowed: BUG, FEATURE_REQUEST, OTHER");
+            throw new IllegalArgumentException("Invalid Report Type. Allowed: BUG, FEEDBACK, OTHER");
         }
     }
 
+    @Mapping(target = "type", expression = "java(report.getType().name())")
+    @Mapping(target = "resolvedAt", source = "solvedAt")
     ReportResponse toResponse(Report report);
 
     default PagedResult<ReportResponse> toPagedResponse(PagedResult<Report> result) {

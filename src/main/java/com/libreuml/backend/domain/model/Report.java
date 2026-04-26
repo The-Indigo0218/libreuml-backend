@@ -24,6 +24,7 @@ public class Report {
     String adminResponse;
     String internalNotes;
     LocalDateTime createdAt;
+    LocalDateTime updatedAt;
     LocalDateTime solvedAt;
     Set<String> evidencesImages;
 
