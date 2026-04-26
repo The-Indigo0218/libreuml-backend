@@ -57,12 +57,17 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.util.List;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalControllerAdvice {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalControllerAdvice.class);
 
     private final MetricsPort metricsPort;
     private final Tracer tracer;
@@ -376,6 +381,7 @@ public class GlobalControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest req) {
+        log.error("Unhandled exception on {} {}", req.getMethod(), req.getRequestURI(), ex);
         String traceId = tracer.currentSpan() != null
                 ? tracer.currentSpan().context().traceId()
                 : null;

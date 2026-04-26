@@ -40,3 +40,6 @@ CHANGELOG-PHASE-5.md
 /CHANGELOG-PHASE-6.md
 docs/tracking
 .env
+
+docs/backend-architecture-entities.md
+docs/v1-readiness-gaps.md

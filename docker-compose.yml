@@ -55,6 +55,7 @@ services:
     image: axllent/mailpit:latest
     restart: unless-stopped
     ports:
+      - "1025:1025"   # SMTP — used by local Spring Boot dev
       - "8025:8025"   # Web UI — inspect all outgoing emails here
 
 volumes:
