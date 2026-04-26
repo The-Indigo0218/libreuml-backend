@@ -1,5 +1,6 @@
 package com.libreuml.backend.domain.model;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.domain.model.exception.ProjectOwnershipException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,13 +26,14 @@ public class Project {
     private String basePackage;
     private DiagramVisibility visibility;
     private ProjectKind projectKind;
+    private ObjectNode vfsSnapshot;
     private long version;
     private Instant createdAt;
     private Instant updatedAt;
 
     public static Project create(UUID ownerId, String name, String description, String author,
                                   String projectVersion, String targetLanguage, String basePackage,
-                                  ProjectKind projectKind) {
+                                  ProjectKind projectKind, ObjectNode vfsSnapshot) {
         return Project.builder()
                 .ownerId(ownerId)
                 .name(name)
@@ -42,6 +44,7 @@ public class Project {
                 .basePackage(basePackage)
                 .visibility(DiagramVisibility.PRIVATE)
                 .projectKind(projectKind != null ? projectKind : ProjectKind.FREE)
+                .vfsSnapshot(vfsSnapshot)
                 .version(1L)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
@@ -50,7 +53,7 @@ public class Project {
 
     public void updateMetadata(String name, String description, String author,
                                 String projectVersion, String targetLanguage, String basePackage,
-                                UUID requesterId) {
+                                ObjectNode vfsSnapshot, UUID requesterId) {
         assertOwner(requesterId);
         if (name != null && !name.isBlank()) {
             this.name = name;
@@ -69,6 +72,9 @@ public class Project {
         }
         if (basePackage != null) {
             this.basePackage = basePackage;
+        }
+        if (vfsSnapshot != null) {
+            this.vfsSnapshot = vfsSnapshot;
         }
         this.updatedAt = Instant.now();
     }

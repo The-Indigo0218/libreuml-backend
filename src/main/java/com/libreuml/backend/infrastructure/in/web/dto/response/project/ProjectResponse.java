@@ -1,5 +1,6 @@
 package com.libreuml.backend.infrastructure.in.web.dto.response.project;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.domain.model.DiagramVisibility;
 import com.libreuml.backend.domain.model.ProjectKind;
 
@@ -17,6 +18,7 @@ public record ProjectResponse(
         String basePackage,
         DiagramVisibility visibility,
         ProjectKind projectKind,
+        ObjectNode vfsSnapshot,
         long version,
         List<ProjectDiagramSummaryResponse> diagrams,
         Instant createdAt,

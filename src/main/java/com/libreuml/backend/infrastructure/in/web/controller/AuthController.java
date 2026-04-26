@@ -108,6 +108,12 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> confirmEmailViaLink(@RequestParam String token) {
+        confirmEmailUseCase.confirm(token);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/password/forgot")
     public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
         requestPasswordResetUseCase.request(request.email());

@@ -1,5 +1,6 @@
 package com.libreuml.backend.infrastructure.out.persistence.entity;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.domain.model.DiagramVisibility;
 import com.libreuml.backend.domain.model.ProjectKind;
 import jakarta.persistence.*;
@@ -49,6 +50,9 @@ public class ProjectEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "project_kind", nullable = true)
     private ProjectKind projectKind;
+
+    @Column(name = "vfs_snapshot", columnDefinition = "jsonb")
+    private ObjectNode vfsSnapshot;
 
     @Version
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package com.libreuml.backend.application.project.dto;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.domain.model.ProjectKind;
 
 import java.util.UUID;
@@ -12,5 +13,6 @@ public record CreateProjectCommand(
         String projectVersion,
         String targetLanguage,
         String basePackage,
-        ProjectKind projectKind
+        ProjectKind projectKind,
+        ObjectNode vfsSnapshot
 ) {}

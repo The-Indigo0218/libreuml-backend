@@ -24,6 +24,7 @@ public record ProjectFullResponse(
             String basePackage,
             DiagramVisibility visibility,
             ProjectKind projectKind,
+            ObjectNode vfsSnapshot,
             long version,
             Instant createdAt,
             Instant updatedAt

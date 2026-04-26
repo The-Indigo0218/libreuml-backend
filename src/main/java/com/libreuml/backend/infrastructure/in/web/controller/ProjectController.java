@@ -89,7 +89,8 @@ public class ProjectController {
                         request.projectVersion(),
                         request.targetLanguage(),
                         request.basePackage(),
-                        request.projectKind()));
+                        request.projectKind(),
+                        request.vfsSnapshot()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new ProjectCreatedResponse(
                 result.project().getId(),
@@ -123,6 +124,7 @@ public class ProjectController {
                 request.projectVersion(),
                 request.targetLanguage(),
                 request.basePackage(),
+                request.vfsSnapshot(),
                 request.version()));
 
         return ResponseEntity.ok(new ProjectUpdatedResponse(
@@ -266,7 +268,7 @@ public class ProjectController {
         return new ProjectResponse(
                 p.getId(), p.getName(), p.getDescription(), p.getAuthor(), p.getProjectVersion(),
                 p.getTargetLanguage(), p.getBasePackage(), p.getVisibility(), p.getProjectKind(),
-                p.getVersion(), diagramSummaries, p.getCreatedAt(), p.getUpdatedAt());
+                p.getVfsSnapshot(), p.getVersion(), diagramSummaries, p.getCreatedAt(), p.getUpdatedAt());
     }
 
     private ProjectModelResponse toModelResponse(ProjectModel m) {
@@ -293,7 +295,7 @@ public class ProjectController {
         ProjectFullResponse.ProjectData projectData = new ProjectFullResponse.ProjectData(
                 p.getId(), p.getName(), p.getDescription(), p.getAuthor(), p.getProjectVersion(),
                 p.getTargetLanguage(), p.getBasePackage(), p.getVisibility(), p.getProjectKind(),
-                p.getVersion(), p.getCreatedAt(), p.getUpdatedAt());
+                p.getVfsSnapshot(), p.getVersion(), p.getCreatedAt(), p.getUpdatedAt());
 
         ProjectFullResponse.ModelData modelData = new ProjectFullResponse.ModelData(
                 m.getId(), m.getModelData(), m.getVersion(), m.getUpdatedAt());

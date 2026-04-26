@@ -58,7 +58,8 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
                 command.projectVersion(),
                 command.targetLanguage(),
                 command.basePackage(),
-                command.projectKind()
+                command.projectKind(),
+                command.vfsSnapshot()
         );
         Project saved = projectRepository.save(project);
 
@@ -121,6 +122,7 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
                 command.projectVersion(),
                 command.targetLanguage(),
                 command.basePackage(),
+                command.vfsSnapshot(),
                 command.requesterId()
         );
 
