@@ -1,5 +1,6 @@
 package com.libreuml.backend.infrastructure.in.web.controller;
 
+import com.libreuml.backend.application.auth.port.in.SessionUseCase;
 import com.libreuml.backend.application.user.port.in.dto.ChangePasswordCommand;
 import com.libreuml.backend.application.user.port.in.dto.UpdateEmailCommand;
 import com.libreuml.backend.application.user.port.in.dto.UpdateSocialProfileCommand;
@@ -9,6 +10,7 @@ import com.libreuml.backend.infrastructure.in.web.dto.request.user.UpdateEmailRe
 import com.libreuml.backend.infrastructure.in.web.dto.request.user.UpdatePasswordRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.user.UpdateUserBasicInfoRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.user.UpdaterSocialProfileRequest;
+import com.libreuml.backend.infrastructure.in.web.dto.response.auth.SessionResponse;
 import com.libreuml.backend.infrastructure.in.web.dto.response.user.UserResponse;
 import com.libreuml.backend.infrastructure.in.web.mapper.UserWebMapper;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
@@ -18,6 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
@@ -25,6 +30,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserWebMapper userWebMapper;
+    private final SessionUseCase sessionUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -69,5 +75,21 @@ public class UserController {
         UpdateEmailCommand command = userWebMapper.toUpdateEmailCommand(request, userDetails.getId());
         UserResponse response = userWebMapper.toUserResponse(userService.updateUserEmail(command));
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me/sessions")
+    public ResponseEntity<List<SessionResponse>> getSessions(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<SessionResponse> sessions = sessionUseCase.listSessions(userDetails.getId())
+                .stream().map(SessionResponse::from).toList();
+        return ResponseEntity.ok(sessions);
+    }
+
+    @DeleteMapping("/me/sessions/{id}")
+    public ResponseEntity<Void> revokeSession(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        sessionUseCase.revokeSession(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
     }
 }

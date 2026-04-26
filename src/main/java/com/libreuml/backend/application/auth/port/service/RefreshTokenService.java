@@ -4,6 +4,7 @@ import com.libreuml.backend.application.auth.dto.RefreshCommand;
 import com.libreuml.backend.application.auth.dto.TokenPair;
 import com.libreuml.backend.application.auth.exception.InvalidRefreshTokenException;
 import com.libreuml.backend.application.auth.port.in.RefreshTokenUseCase;
+import com.libreuml.backend.application.auth.port.in.SessionUseCase;
 import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.TokenProviderPort;
@@ -18,11 +19,12 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class RefreshTokenService implements RefreshTokenUseCase {
+public class RefreshTokenService implements RefreshTokenUseCase, SessionUseCase {
 
     private static final int REFRESH_TOKEN_VALIDITY_DAYS = 7;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -82,6 +84,19 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         String hash = AuthService.sha256Hex(rawRefreshToken);
         refreshTokenRepository.findByTokenHash(hash)
                 .ifPresent(token -> refreshTokenRepository.deleteById(token.getId()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RefreshToken> listSessions(UUID userId) {
+        return refreshTokenRepository.findAllActiveByUserId(userId);
+    }
+
+    @Override
+    @Transactional
+    public void revokeSession(UUID tokenId, UUID userId) {
+        refreshTokenRepository.findByIdAndUserId(tokenId, userId)
+                .ifPresent(token -> refreshTokenRepository.save(token.revoke()));
     }
 
     private String generateOpaqueToken() {

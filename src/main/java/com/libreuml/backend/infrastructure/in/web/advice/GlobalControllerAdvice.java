@@ -11,6 +11,7 @@ import com.libreuml.backend.application.emailverification.exception.EmailNotVeri
 import com.libreuml.backend.application.emailverification.exception.InvalidVerificationTokenException;
 import com.libreuml.backend.application.passwordreset.exception.InvalidPasswordResetTokenException;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
+import io.micrometer.tracing.Tracer;
 import com.libreuml.backend.application.courses.exception.CourseAlreadyExistsException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
@@ -43,6 +44,8 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -62,6 +65,7 @@ import java.util.List;
 public class GlobalControllerAdvice {
 
     private final MetricsPort metricsPort;
+    private final Tracer tracer;
 
     // ── Email Verification ────────────────────────────────────────────────────
 
@@ -282,6 +286,24 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpServletRequest req) {
+        if (ex.getCause() instanceof InvalidFormatException ife && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            String field = ife.getPath().isEmpty() ? "unknown" : ife.getPath().getLast().getFieldName();
+            String accepted = java.util.Arrays.stream(ife.getTargetType().getEnumConstants())
+                    .map(Object::toString)
+                    .collect(java.util.stream.Collectors.joining(", "));
+            List<FieldValidationError> errors = List.of(new FieldValidationError(
+                    field, ife.getValue(), "Must be one of: " + accepted));
+            return ResponseEntity.badRequest().body(new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                    "Validation failed", Instant.now(), req.getRequestURI(), errors, "VALIDATION_FAILED", null));
+        }
+        if (ex.getCause() instanceof UnrecognizedPropertyException upe) {
+            List<FieldValidationError> errors = List.of(new FieldValidationError(
+                    upe.getPropertyName(), null, "Unknown field"));
+            return ResponseEntity.badRequest().body(new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                    "Validation failed", Instant.now(), req.getRequestURI(), errors, "VALIDATION_FAILED", null));
+        }
         return error(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body", req);
     }
 
@@ -298,7 +320,8 @@ public class GlobalControllerAdvice {
                 Instant.now(),
                 req.getRequestURI(),
                 errors,
-                "VALIDATION_FAILED"));
+                "VALIDATION_FAILED",
+                null));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -317,7 +340,8 @@ public class GlobalControllerAdvice {
                 Instant.now(),
                 req.getRequestURI(),
                 errors,
-                "VALIDATION_FAILED"));
+                "VALIDATION_FAILED",
+                null));
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -352,7 +376,18 @@ public class GlobalControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest req) {
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", req);
+        String traceId = tracer.currentSpan() != null
+                ? tracer.currentSpan().context().traceId()
+                : null;
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                "An unexpected error occurred",
+                Instant.now(),
+                req.getRequestURI(),
+                null,
+                null,
+                traceId));
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────
@@ -369,6 +404,7 @@ public class GlobalControllerAdvice {
                 Instant.now(),
                 req.getRequestURI(),
                 null,
-                code));
+                code,
+                null));
     }
 }

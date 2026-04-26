@@ -7,6 +7,8 @@ import com.libreuml.backend.infrastructure.out.persistence.repository.SpringData
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +27,17 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepository {
     @Override
     public Optional<RefreshToken> findByTokenHash(String tokenHash) {
         return springRepository.findByTokenHash(tokenHash).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<RefreshToken> findByIdAndUserId(UUID id, UUID userId) {
+        return springRepository.findByIdAndUserId(id, userId).map(this::toDomain);
+    }
+
+    @Override
+    public List<RefreshToken> findAllActiveByUserId(UUID userId) {
+        return springRepository.findAllByUserIdAndRevokedFalseAndExpiresAtAfter(userId, Instant.now())
+                .stream().map(this::toDomain).toList();
     }
 
     @Override

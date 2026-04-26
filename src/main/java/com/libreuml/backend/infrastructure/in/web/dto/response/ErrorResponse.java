@@ -17,5 +17,6 @@ public record ErrorResponse(
         Instant timestamp,
         String path,
         List<FieldValidationError> errors,
-        String code
+        String code,
+        String traceId
 ) {}
