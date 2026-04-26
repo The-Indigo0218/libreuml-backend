@@ -1,0 +1,41 @@
+# Production extension — adds nginx (HTTPS) and certbot (Let's Encrypt renewal).
+#
+# Usage:
+#   First time only → run ./init-letsencrypt.sh
+#   Then → docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Note: firewall port 8080 on the host so only nginx can reach the API.
+
+services:
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      # Tell envsubst to only replace ${DOMAIN} — leave nginx $variables untouched
+      NGINX_ENVSUBST_TEMPLATE_VARS: DOMAIN
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./data/certbot/conf:/etc/letsencrypt:ro
+      - ./data/certbot/www:/var/www/certbot:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    # Attempt renewal every 12 hours; certs expire after 90 days
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+        while :; do
+          certbot renew --webroot -w /var/www/certbot --quiet;
+          sleep 12h & wait $${!};
+        done"
