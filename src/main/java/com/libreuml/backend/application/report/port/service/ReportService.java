@@ -41,6 +41,21 @@ public class ReportService implements CreateReportUseCase, UpdateReportUseCase, 
     }
 
     @Override
+    public Report findByIdWithOwnershipCheck(UUID reportId, UUID requestingUserId) {
+        Report report = getReportOrThrow(reportId);
+        User requestingUser = validateUserExists(requestingUserId);
+
+        boolean isAdmin = requestingUser.getRole().equals(RoleEnum.ADMIN);
+        boolean isOwner = report.getUserId().equals(requestingUserId);
+
+        if (!isAdmin && !isOwner) {
+            throw new UserNotAuthorizedException("User with id " + requestingUserId + " is not authorized to access this report");
+        }
+
+        return report;
+    }
+
+    @Override
     public PagedResult<Report> findByUserId(UUID userId, PaginationCommand paginationCommand) {
         validateUserExists(userId);
         return reportRepository.findByUserId(userId, paginationCommand);

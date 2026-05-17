@@ -60,8 +60,11 @@ public class ReportController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReportResponse> getReportById(@PathVariable UUID id) {
-        Report report = reportService.findById(id);
+    public ResponseEntity<ReportResponse> getReportById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Report report = reportService.findByIdWithOwnershipCheck(id, userDetails.getId());
         return ResponseEntity.ok(reportWebMapper.toResponse(report));
     }
 
