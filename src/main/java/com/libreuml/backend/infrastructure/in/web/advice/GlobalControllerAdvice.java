@@ -5,6 +5,7 @@ import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
+import com.libreuml.backend.application.report.exception.ReportNotFoundException;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
 import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
@@ -37,6 +38,13 @@ public class GlobalControllerAdvice {
     public ProblemDetail handleUserNotFound(UserNotFoundException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problemDetail.setTitle("User Not Found");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ProblemDetail handleReportNotFound(ReportNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Report Not Found");
         return problemDetail;
     }
 
