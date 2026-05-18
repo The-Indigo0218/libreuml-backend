@@ -3,6 +3,7 @@ package com.libreuml.backend.infrastructure.in.web.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.diagram.dto.CreateDiagramCommand;
 import com.libreuml.backend.application.diagram.dto.UpdateDiagramCommand;
 import com.libreuml.backend.application.diagram.port.in.CreateDiagramUseCase;
@@ -69,6 +70,22 @@ public class DiagramController {
                 result.totalPages(),
                 result.isLast()
         );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/public")
+    public ResponseEntity<PagedResult<DiagramSummaryResponse>> listPublic(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        PaginationCommand pagination = new PaginationCommand(page, size, sortBy, direction);
+        PagedResult<Diagram> result = getDiagramUseCase.listPublic(pagination);
+        PagedResult<DiagramSummaryResponse> response = new PagedResult<>(
+                result.content().stream().map(this::toSummaryResponse).toList(),
+                result.pageNumber(), result.pageSize(),
+                result.totalElements(), result.totalPages(), result.isLast());
         return ResponseEntity.ok(response);
     }
 

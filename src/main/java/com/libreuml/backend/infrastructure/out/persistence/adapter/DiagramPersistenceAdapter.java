@@ -1,8 +1,10 @@
 package com.libreuml.backend.infrastructure.out.persistence.adapter;
 
 import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
 import com.libreuml.backend.domain.model.Diagram;
+import com.libreuml.backend.domain.model.DiagramVisibility;
 import com.libreuml.backend.infrastructure.out.persistence.entity.DiagramEntity;
 import com.libreuml.backend.infrastructure.out.persistence.repository.SpringDataDiagramRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +67,17 @@ public class DiagramPersistenceAdapter implements DiagramRepository {
                 diagramPage.getTotalPages(),
                 diagramPage.isLast()
         );
+    }
+
+    @Override
+    public PagedResult<Diagram> findPublicDiagrams(PaginationCommand pagination) {
+        Sort.Direction dir = "ASC".equalsIgnoreCase(pagination.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(pagination.page(), pagination.size(), Sort.by(dir, pagination.sortBy()));
+        Page<DiagramEntity> page = jpaRepository.findByVisibility(DiagramVisibility.PUBLIC, pageable);
+        return new PagedResult<>(
+                page.getContent().stream().map(this::toDomain).toList(),
+                page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(), page.isLast());
     }
 
     @Override

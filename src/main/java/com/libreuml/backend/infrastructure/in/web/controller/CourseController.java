@@ -1,11 +1,11 @@
 package com.libreuml.backend.infrastructure.in.web.controller;
 
 
-import com.libreuml.backend.application.courses.port.in.dto.CreateCourseCommand;
-import com.libreuml.backend.application.courses.port.in.dto.DeactivateCourseCommand;
-import com.libreuml.backend.application.courses.port.in.dto.UpdateCourseVisibilityCommand;
-import com.libreuml.backend.application.courses.port.in.dto.UpdateTitleAndDescriptionCourseCommand;
+import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
+import com.libreuml.backend.application.courses.port.in.dto.*;
 import com.libreuml.backend.application.courses.port.service.CourseService;
+import com.libreuml.backend.domain.model.Course;
 import com.libreuml.backend.infrastructure.in.web.dto.request.course.CreateCourseRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.course.UpdateTitleAndDescriptionCourseRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.course.UpdateVisibilityRequest;
@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -72,5 +73,56 @@ public class CourseController {
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponse> getById(@PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(courseWebMapper.toCourseResponse(courseService.getCourseById(id, userDetails.getId())));
+    }
+
+    @GetMapping
+    public ResponseEntity<PagedResult<CourseResponse>> listPublic(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        PaginationCommand pagination = new PaginationCommand(page, size, sortBy, direction);
+        PagedResult<Course> result = courseService.getAllPublicCourses(pagination);
+        return ResponseEntity.ok(mapCoursePagedResult(result));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PagedResult<CourseResponse>> search(
+            @RequestParam String title,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        PaginationCommand pagination = new PaginationCommand(page, size, sortBy, direction);
+        PagedResult<Course> result = courseService.searchCursesByTitle(new SearchCoursesByTitleCommand(title, pagination));
+        return ResponseEntity.ok(mapCoursePagedResult(result));
+    }
+
+    @GetMapping("/tag/{tag}")
+    public ResponseEntity<PagedResult<CourseResponse>> listByTag(
+            @PathVariable String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        PaginationCommand pagination = new PaginationCommand(page, size, sortBy, direction);
+        PagedResult<Course> result = courseService.getCoursesByTag(new GetCourseByTag(tag, pagination));
+        return ResponseEntity.ok(mapCoursePagedResult(result));
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<CourseResponse> getBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(courseWebMapper.toCourseResponse(courseService.getCourseBySlug(slug)));
+    }
+
+    private PagedResult<CourseResponse> mapCoursePagedResult(PagedResult<Course> result) {
+        List<CourseResponse> responses = result.content().stream()
+                .map(courseWebMapper::toCourseResponse)
+                .toList();
+        return new PagedResult<>(responses, result.pageNumber(), result.pageSize(),
+                result.totalElements(), result.totalPages(), result.isLast());
     }
 }

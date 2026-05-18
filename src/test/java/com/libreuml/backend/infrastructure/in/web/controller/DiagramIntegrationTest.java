@@ -54,6 +54,8 @@ class DiagramIntegrationTest extends AbstractIntegrationTest {
 
         register(ownerEmail,    ownerIp);
         register(strangerEmail, strangerIp);
+        verifyUserEmail(ownerEmail);
+        verifyUserEmail(strangerEmail);
 
         ownerCookies    = login(ownerEmail,    ownerIp);
         strangerCookies = login(strangerEmail, strangerIp);

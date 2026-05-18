@@ -13,6 +13,7 @@ import com.libreuml.backend.application.passwordreset.exception.InvalidPasswordR
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.courses.exception.CourseAlreadyExistsException;
 import com.libreuml.backend.application.courses.exception.CourseNotFoundException;
+import com.libreuml.backend.application.report.exception.ReportNotFoundException;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
 import com.libreuml.backend.application.enrollment.exception.EnrollmentAlreadyExistsException;
@@ -106,6 +107,12 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCourseNotFound(
             CourseNotFoundException ex, HttpServletRequest req) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReportNotFound(
+            ReportNotFoundException ex, HttpServletRequest req) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
     }
 

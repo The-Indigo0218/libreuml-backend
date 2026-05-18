@@ -28,12 +28,22 @@ public interface UserPersistenceMapper {
         if (entity == null) {
             return null;
         }
-        return switch (entity) {
-            case StudentEntity s -> toStudentDomain(s);
-            case TeacherEntity t -> toTeacherDomain(t);
-            case DeveloperEntity d -> toDeveloperDomain(d);
-            default -> throw new IllegalArgumentException("Unknown entity type: " + entity.getClass().getName());
-        };
+        // Unwrap Hibernate proxy to get actual type
+        if (entity.getClass().getName().contains("HibernateProxy")) {
+            var unwrap = org.hibernate.Hibernate.unproxy(entity);
+            if (unwrap instanceof UserEntity unwrappedEntity) {
+                entity = unwrappedEntity;
+            }
+        }
+
+        if (entity instanceof StudentEntity s) {
+            return toStudentDomain(s);
+        } else if (entity instanceof TeacherEntity t) {
+            return toTeacherDomain(t);
+        } else if (entity instanceof DeveloperEntity d) {
+            return toDeveloperDomain(d);
+        }
+        throw new IllegalArgumentException("Unknown entity type: " + entity.getClass().getName());
     }
 
     Student toStudentDomain(StudentEntity entity);

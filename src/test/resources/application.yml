@@ -9,6 +9,10 @@ app:
   cors:
     allowed-origins:
       - "http://localhost:test"
+  frontend:
+    url: http://localhost:test
+  mail:
+    from: no-reply@libreuml.test
 
 # Disable span sampling and OTLP export during tests to prevent connection attempts
 # to a non-existent collector and keep test output clean.
