@@ -276,9 +276,9 @@ No permite headers personalizados que podrían ser necesarios para features futu
 11. ~~Validación de longitud máxima en todos los DTOs~~ - ✅ COMPLETADO (CreateCourseRequest, CreateReportRequest, CreateResourceRequest, ResponseReportRequest, UpdateTitleAndDescriptionCourseRequest, UpdateVisibilityRequest, UpdateTitleAndContentRequest)
 
 ### Bajo (Planificar para siguiente sprint)
-12. Eliminar endpoints deprecados de DiagramController
-13. Agregar límite de memoria al cache de rate limit
-14. Revisar logs para sanitize campos sensibles
+12. ~~Eliminar endpoints deprecados de DiagramController~~ - ✅ N/A (el controller ya estaba limpio, no existen endpoints deprecados en el codebase)
+13. ~~Agregar límite de memoria al cache de rate limit~~ - ✅ COMPLETADO (maximumSize(10000) en authBuckets y adminBuckets)
+14. ~~Revisar logs para sanitize campos sensibles~~ - ✅ N/A (ApiKeyAuthenticationFilter no existe; los únicos logs son AdminSeeder y auditoría de ReportController, sin datos sensibles)
 
 ---
 
