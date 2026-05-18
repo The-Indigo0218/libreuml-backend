@@ -1,10 +1,16 @@
 package com.libreuml.backend.infrastructure.out.persistence.adapter;
 
+import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
 import com.libreuml.backend.domain.model.Diagram;
+import com.libreuml.backend.domain.model.DiagramVisibility;
 import com.libreuml.backend.infrastructure.out.persistence.entity.DiagramEntity;
 import com.libreuml.backend.infrastructure.out.persistence.repository.SpringDataDiagramRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -59,6 +65,17 @@ public class DiagramPersistenceAdapter implements DiagramRepository {
     @Override
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public PagedResult<Diagram> findPublicDiagrams(PaginationCommand pagination) {
+        Sort.Direction dir = "ASC".equalsIgnoreCase(pagination.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(
+                pagination.page(), pagination.size(), Sort.by(dir, pagination.sortBy()));
+        Page<DiagramEntity> page = jpaRepository.findByVisibility(DiagramVisibility.PUBLIC, pageable);
+        List<Diagram> content = page.getContent().stream().map(this::toDomain).toList();
+        return new PagedResult<>(content, page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(), page.isLast());
     }
 
     private DiagramEntity toEntity(Diagram diagram) {
