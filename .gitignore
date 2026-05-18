@@ -38,3 +38,5 @@ build/
 CHANGELOG-PHASE-4.md
 CHANGELOG-PHASE-5.md
 /CHANGELOG-PHASE-6.md
+docs
+.env

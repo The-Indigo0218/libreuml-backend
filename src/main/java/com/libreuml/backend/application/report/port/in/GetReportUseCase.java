@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface GetReportUseCase {
     Report findById(UUID id);
 
+    Report findByIdWithOwnershipCheck(UUID reportId, UUID requestingUserId);
+
     PagedResult<Report> findByUserId(UUID userId, PaginationCommand paginationCommand);
 
     PagedResult<Report> getByStatus(ReportStatus status, PaginationCommand paginationCommand);
