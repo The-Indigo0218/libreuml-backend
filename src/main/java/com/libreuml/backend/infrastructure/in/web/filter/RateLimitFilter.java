@@ -36,6 +36,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
             .expireAfterWrite(2, TimeUnit.MINUTES)
+            .maximumSize(10000)
             .build();
 
     private final Cache<String, Bucket> adminBuckets = Caffeine.newBuilder()

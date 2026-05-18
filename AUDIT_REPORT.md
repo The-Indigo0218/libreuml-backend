@@ -270,10 +270,10 @@ No permite headers personalizados que podrían ser necesarios para features futu
 7. ~~Rate limiting para endpoints administrativos~~ - ✅ COMPLETADO (RateLimitFilter ahora cubre /api/v1/reports admin con 30 req/min)
 
 ### Medio (Corregir este mes)
-8. Agregar maximumSize al cache de rate limiting
+8. ~~Agregar maximumSize al cache de rate limiting~~ - ✅ COMPLETADO (authBuckets en RateLimitFilter ahora tiene maximumSize(10000). sortBy sanitizado con allowlist en PaginationCommand)
 9. Completar cobertura de tests para CourseService, EnrollmentService
 10. Implementar endpoint de exploración de proyectos públicos
-11. Validación de longitud máxima en todos los DTOs
+11. ~~Validación de longitud máxima en todos los DTOs~~ - ✅ COMPLETADO (CreateCourseRequest, CreateReportRequest, CreateResourceRequest, ResponseReportRequest, UpdateTitleAndDescriptionCourseRequest, UpdateVisibilityRequest, UpdateTitleAndContentRequest)
 
 ### Bajo (Planificar para siguiente sprint)
 12. Eliminar endpoints deprecados de DiagramController
