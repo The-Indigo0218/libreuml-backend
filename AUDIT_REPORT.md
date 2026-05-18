@@ -259,11 +259,15 @@ No permite headers personalizados que podrían ser necesarios para features futu
 2. ~~**Actualizar jjwt**~~ - ✅ CORREGIDO (actualizado a 0.12.6)
 3. ~~**Verificar migración V14**~~ - ✅ NO APLICA (migración no existe aún)
 
+### Bugs encontrados y corregidos durante la revisión
+- **Bug en ReportWebMapper**: No mapeaba `solvedAt` a `resolvedAt` ni convertía enums a strings
+- **Bug en UserPersistenceMapper**: No manejaba proxies de Hibernate, causando 500 en endpoints de reportes
+
 ### Alto (Corregir esta semana)
-4. Agregar tests para ReportController, OAuthController
-5. Implementar blacklist de JWT para invalidación inmediata
-6. Agregar logging de auditoría para operaciones admin
-7. Rate limiting para endpoints administrativos
+4. ~~Agregar tests para ReportController, OAuthController~~ - ✅ COMPLETADO (arreglado bug en ReportWebMapper y UserPersistenceMapper)
+5. ~~Implementar blacklist de JWT para invalidación inmediata~~ - ✅ YA EXISTÍA (JwtCookieAuthFilter verifica passwordVersion)
+6. ~~Agregar logging de auditoría para operaciones admin~~ - ✅ COMPLETADO (ReportController líneas 95, 120, 131, 143)
+7. ~~Rate limiting para endpoints administrativos~~ - ✅ COMPLETADO (RateLimitFilter ahora cubre /api/v1/reports admin con 30 req/min)
 
 ### Medio (Corregir este mes)
 8. Agregar maximumSize al cache de rate limiting

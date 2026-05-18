@@ -20,6 +20,7 @@ import com.libreuml.backend.infrastructure.in.web.mapper.ReportWebMapper;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/v1/reports")
 @RequiredArgsConstructor
 public class ReportController {
@@ -81,8 +83,12 @@ public class ReportController {
             @RequestParam(defaultValue = "DESC") String direction,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
-            @RequestParam(required = false) String type
+            @RequestParam(required = false) String type,
+            @AuthenticationPrincipal CustomUserDetails admin
     ) {
+        log.info("Admin {} accessed reports list - filters: status={}, priority={}, type={}",
+                admin.getId(), status, priority, type);
+
         PaginationCommand paginationCommand = new PaginationCommand(page, size, sortBy, direction);
         PagedResult<Report> pagedResult;
 
@@ -113,6 +119,7 @@ public class ReportController {
             @RequestBody @Valid UpdateReportStatusRequest request,
             @AuthenticationPrincipal CustomUserDetails admin
     ) {
+        log.info("Admin {} updated status of report {} to {}", admin.getId(), id, request.status());
         UpdateReportStatusCommand command = reportWebMapper.toUpdateReportStatuscommand(request, id, admin.getId());
         Report updatedReport = reportService.updateReportStatus(command);
         return ResponseEntity.ok(reportWebMapper.toResponse(updatedReport));
@@ -125,6 +132,7 @@ public class ReportController {
             @RequestBody @Valid UpdateReportPriorityRequest request,
             @AuthenticationPrincipal CustomUserDetails admin
     ) {
+        log.info("Admin {} updated priority of report {} to {}", admin.getId(), id, request.priority());
         UpdateReportPriorityCommand command = reportWebMapper.toUpdateReportPriorityCommand(request, id, admin.getId());
         Report updatedReport = reportService.updateReportPriority(command);
         return ResponseEntity.ok(reportWebMapper.toResponse(updatedReport));
@@ -137,6 +145,7 @@ public class ReportController {
             @RequestBody @Valid ResponseReportRequest request,
             @AuthenticationPrincipal CustomUserDetails admin
     ) {
+        log.info("Admin {} responded to report {}", admin.getId(), id);
         ResponseAndUpdateStatusCommand command = reportWebMapper.toResponseAndUpdateStatusCommand(request, id, admin.getId());
         Report updatedReport = reportService.responseAndUpdateStatus(command);
         return ResponseEntity.ok(reportWebMapper.toResponse(updatedReport));

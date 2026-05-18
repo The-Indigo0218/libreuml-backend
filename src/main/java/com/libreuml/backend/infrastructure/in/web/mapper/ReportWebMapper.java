@@ -22,7 +22,6 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportWebMapper {
 
-    @Mapping(target = "userId", source = "userId")
     @Mapping(target = "type", source = "request.type", qualifiedByName = "ValidateReportType")
     CreateReportCommand toCreateReportCommand(CreateReportRequest request, UUID userId);
 
@@ -59,13 +58,23 @@ public interface ReportWebMapper {
         }
     }
 
-    @Named("ValidateReportType")
+@Named("ValidateReportType")
     default ReportType validateReportType(String reportType) {
         try {
             return ReportType.valueOf(reportType.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid Report Type. Allowed: BUG, FEATURE_REQUEST, OTHER");
         }
+    }
+
+    @Named("ReportStatusToString")
+    default String reportStatusToString(ReportStatus status) {
+        return status != null ? status.name() : null;
+    }
+
+    @Named("ReportPriorityToString")
+    default String reportPriorityToString(ReportPriority priority) {
+        return priority != null ? priority.name() : null;
     }
 
     ReportResponse toResponse(Report report);

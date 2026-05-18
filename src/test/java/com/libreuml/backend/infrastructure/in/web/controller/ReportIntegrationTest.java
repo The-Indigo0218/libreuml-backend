@@ -151,13 +151,11 @@ class ReportIntegrationTest extends AbstractIntegrationTest {
         String reportId = objectMapper.readTree(listResult.getResponse().getContentAsString())
                 .get("content").get(0).get("id").asText();
 
-        MvcResult getResult = mockMvc.perform(get(REPORTS_URL + "/" + reportId)
+        mockMvc.perform(get(REPORTS_URL + "/" + reportId)
                         .cookie(ownerCookies)
                         .header("X-Forwarded-For", ownerIp))
-                .andReturn();
-
-        System.err.println("GET Status: " + getResult.getResponse().getStatus());
-        System.err.println("GET Content: " + getResult.getResponse().getContentAsString());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("My Test Report"));
     }
 
     private String createOwnReport() throws Exception {

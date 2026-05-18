@@ -11,6 +11,7 @@ import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeExcepti
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalControllerAdvice {
 
     // 404 Not Found
