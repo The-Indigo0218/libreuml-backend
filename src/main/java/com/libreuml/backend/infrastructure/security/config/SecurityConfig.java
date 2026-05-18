@@ -1,8 +1,11 @@
 package com.libreuml.backend.infrastructure.security.config;
 
+import com.libreuml.backend.infrastructure.security.ApiKeyAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.CustomUserDetailsService;
 import com.libreuml.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.JwtCookieAuthFilter;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +36,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtCookieAuthFilter jwtCookieAuthFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
 
@@ -45,9 +49,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/oauth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         // Actuator: liveness/readiness probes and Prometheus scraping are unauthenticated.
                         // All other management endpoints (/internal/metrics, /internal/info) require auth.
                         .requestMatchers("/internal/health/**").permitAll()
@@ -61,6 +67,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
                 .authenticationProvider(authenticationProvider())
                 .headers(headers -> headers
                         .contentTypeOptions(Customizer.withDefaults())
@@ -71,9 +78,25 @@ public class SecurityConfig {
                         )
                         .cacheControl(Customizer.withDefaults())
                 )
+                // Both filters are registered at order 799 (one slot before UPAF = 800).
+                // Filters at the same order run in insertion order — apiKey is added first,
+                // so it executes before jwtCookie. Each filter checks for its own header prefix
+                // and passes through when the other transport is in use.
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtCookieAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, ex) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json");
+            response.getWriter().write(
+                "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Authentication required.\",\"path\":\"" + request.getRequestURI() + "\"}"
+            );
+        };
     }
 
     @Bean
@@ -104,6 +127,14 @@ public class SecurityConfig {
     public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtAuthFilterServletRegistration(
             JwtAuthenticationFilter filter) {
         FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<ApiKeyAuthenticationFilter> disableApiKeyFilterServletRegistration(
+            ApiKeyAuthenticationFilter filter) {
+        FilterRegistrationBean<ApiKeyAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }

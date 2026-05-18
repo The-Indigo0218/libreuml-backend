@@ -12,13 +12,19 @@ import com.libreuml.backend.application.diagram.port.in.DeleteDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.GetDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.in.UpdateDiagramUseCase;
 import com.libreuml.backend.application.diagram.port.out.DiagramRepository;
+import com.libreuml.backend.application.emailverification.exception.EmailNotVerifiedException;
+import com.libreuml.backend.application.user.exception.UserNotFoundException;
+import com.libreuml.backend.application.user.port.out.UserRepository;
+import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.domain.model.Diagram;
+import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
+import com.libreuml.backend.domain.model.exception.QuotaExceededException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Service
@@ -28,14 +34,43 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         UpdateDiagramUseCase, DeleteDiagramUseCase {
 
     private final DiagramRepository diagramRepository;
+    private final UserRepository userRepository;
     private final MetricsPort metricsPort;
 
     @Override
     public Diagram create(CreateDiagramCommand command) {
+        User user = userRepository.getUserById(command.ownerId())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + command.ownerId()));
+
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email must be verified before saving diagrams.");
+        }
+
+        // Domain invariant first: Diagram.create() calls assertPayloadSize() and throws
+        // DiagramPayloadTooLargeException if the content exceeds the 5 MB per-diagram ceiling.
+        // This must run before the quota check so oversized payloads report the domain error.
         Diagram diagram = Diagram.create(
                 command.ownerId(), command.title(), command.type(), command.content());
+
+        // Compute UTF-8 payload size using the same mechanism as Diagram.assertPayloadSize().
+        long payloadBytes = command.content() != null
+                ? command.content().toString().getBytes(StandardCharsets.UTF_8).length
+                : 0L;
+
+        if (!user.hasQuotaFor(payloadBytes)) {
+            throw new QuotaExceededException(
+                    "Storage quota exceeded. Quota: " + user.getStorageQuotaBytes()
+                    + " bytes, already used: " + user.getStorageUsedBytes()
+                    + " bytes, requested: " + payloadBytes + " bytes.");
+        }
+
         Diagram saved = diagramRepository.save(diagram);
+
+        user.incrementUsage(payloadBytes);
+        userRepository.save(user);
+
         metricsPort.incrementDiagramSaved(saved.getType());
+        metricsPort.observeUserStorageBytes(user.getStorageUsedBytes());
         return saved;
     }
 
@@ -52,8 +87,8 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
 
     @Override
     @Transactional(readOnly = true)
-    public List<Diagram> listByOwner(UUID ownerId) {
-        return diagramRepository.findByOwnerId(ownerId);
+    public PagedResult<Diagram> listByOwner(UUID ownerId, int page, int size) {
+        return diagramRepository.findAllByOwnerId(ownerId, page, size);
     }
 
     @Override
@@ -82,6 +117,35 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
                     + ". Reload the diagram and retry.");
         }
 
+        if (command.content() != null) {
+            long oldSize = diagram.getContent() != null
+                    ? diagram.getContent().toString().getBytes(StandardCharsets.UTF_8).length
+                    : 0L;
+            long newSize = command.content().toString().getBytes(StandardCharsets.UTF_8).length;
+            long delta = newSize - oldSize;
+
+            if (delta != 0) {
+                User owner = userRepository.getUserById(command.requesterId())
+                        .orElseThrow(() -> new UserNotFoundException("User not found: " + command.requesterId()));
+
+                if (delta > 0 && !owner.hasQuotaFor(delta)) {
+                    throw new QuotaExceededException(
+                            "Storage quota exceeded. Cannot expand diagram: would need "
+                            + delta + " more bytes but only "
+                            + (owner.getStorageQuotaBytes() - owner.getStorageUsedBytes())
+                            + " bytes remain.");
+                }
+
+                if (delta > 0) {
+                    owner.incrementUsage(delta);
+                } else {
+                    owner.decrementUsage(-delta);
+                }
+                userRepository.save(owner);
+                metricsPort.observeUserStorageBytes(owner.getStorageUsedBytes());
+            }
+        }
+
         diagram.update(command.title(), command.content(), command.requesterId());
         return diagramRepository.save(diagram);
     }
@@ -91,6 +155,17 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
         Diagram diagram = diagramRepository.findById(diagramId)
                 .orElseThrow(() -> new DiagramNotFoundException("Diagram not found: " + diagramId));
         diagram.delete(requesterId);
+
+        long payloadBytes = diagram.getContent() != null
+                ? diagram.getContent().toString().getBytes(StandardCharsets.UTF_8).length
+                : 0L;
+
         diagramRepository.deleteById(diagramId);
+
+        User user = userRepository.getUserById(requesterId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + requesterId));
+        user.decrementUsage(payloadBytes);
+        userRepository.save(user);
+        metricsPort.observeUserStorageBytes(user.getStorageUsedBytes());
     }
 }

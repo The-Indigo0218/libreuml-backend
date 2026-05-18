@@ -10,11 +10,11 @@ import com.libreuml.backend.infrastructure.out.persistence.repository.SpringData
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,26 +56,33 @@ public class DiagramPersistenceAdapter implements DiagramRepository {
     }
 
     @Override
-    public List<Diagram> findByOwnerId(UUID ownerId) {
-        return jpaRepository.findByOwnerId(ownerId).stream()
-                .map(this::toDomain)
-                .toList();
-    }
-
-    @Override
-    public void deleteById(UUID id) {
-        jpaRepository.deleteById(id);
+    public PagedResult<Diagram> findAllByOwnerId(UUID ownerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Page<DiagramEntity> diagramPage = jpaRepository.findAllByOwnerId(ownerId, pageable);
+        return new PagedResult<>(
+                diagramPage.getContent().stream().map(this::toDomain).toList(),
+                diagramPage.getNumber(),
+                diagramPage.getSize(),
+                diagramPage.getTotalElements(),
+                diagramPage.getTotalPages(),
+                diagramPage.isLast()
+        );
     }
 
     @Override
     public PagedResult<Diagram> findPublicDiagrams(PaginationCommand pagination) {
         Sort.Direction dir = "ASC".equalsIgnoreCase(pagination.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        org.springframework.data.domain.Pageable pageable = PageRequest.of(
-                pagination.page(), pagination.size(), Sort.by(dir, pagination.sortBy()));
+        Pageable pageable = PageRequest.of(pagination.page(), pagination.size(), Sort.by(dir, pagination.sortBy()));
         Page<DiagramEntity> page = jpaRepository.findByVisibility(DiagramVisibility.PUBLIC, pageable);
-        List<Diagram> content = page.getContent().stream().map(this::toDomain).toList();
-        return new PagedResult<>(content, page.getNumber(), page.getSize(),
+        return new PagedResult<>(
+                page.getContent().stream().map(this::toDomain).toList(),
+                page.getNumber(), page.getSize(),
                 page.getTotalElements(), page.getTotalPages(), page.isLast());
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        jpaRepository.deleteById(id);
     }
 
     private DiagramEntity toEntity(Diagram diagram) {

@@ -17,15 +17,18 @@ import com.libreuml.backend.infrastructure.in.web.dto.response.diagram.DiagramRe
 import com.libreuml.backend.infrastructure.in.web.dto.response.diagram.DiagramSummaryResponse;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
+@Validated
 @RestController
 @RequestMapping("/api/v1/diagrams")
 @RequiredArgsConstructor
@@ -53,31 +56,35 @@ public class DiagramController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DiagramSummaryResponse>> list(
+    public ResponseEntity<PagedResult<DiagramSummaryResponse>> list(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
-        List<DiagramSummaryResponse> summaries = getDiagramUseCase.listByOwner(principal.getId())
-                .stream()
-                .map(this::toSummaryResponse)
-                .toList();
-
-        return ResponseEntity.ok(summaries);
+        PagedResult<Diagram> result = getDiagramUseCase.listByOwner(principal.getId(), page, size);
+        PagedResult<DiagramSummaryResponse> response = new PagedResult<>(
+                result.content().stream().map(this::toSummaryResponse).toList(),
+                result.pageNumber(),
+                result.pageSize(),
+                result.totalElements(),
+                result.totalPages(),
+                result.isLast()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/public")
     public ResponseEntity<PagedResult<DiagramSummaryResponse>> listPublic(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String direction
     ) {
         PaginationCommand pagination = new PaginationCommand(page, size, sortBy, direction);
         PagedResult<Diagram> result = getDiagramUseCase.listPublic(pagination);
-        List<DiagramSummaryResponse> summaries = result.content().stream()
-                .map(this::toSummaryResponse)
-                .toList();
         PagedResult<DiagramSummaryResponse> response = new PagedResult<>(
-                summaries, result.pageNumber(), result.pageSize(),
+                result.content().stream().map(this::toSummaryResponse).toList(),
+                result.pageNumber(), result.pageSize(),
                 result.totalElements(), result.totalPages(), result.isLast());
         return ResponseEntity.ok(response);
     }

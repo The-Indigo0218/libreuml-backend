@@ -41,4 +41,25 @@ public interface MetricsPort {
      * @param provider lowercase provider name (e.g., {@code "github"}, {@code "google"})
      */
     void incrementOAuthLogin(String provider);
+
+    /**
+     * Increments the daily active-user counter.
+     *
+     * @param method {@code "credential"} for password login, {@code "github"} or {@code "google"} for OAuth
+     */
+    void incrementActiveUsersDaily(String method);
+
+    /**
+     * Increments the quota-rejection counter whenever a request is rejected with HTTP 422
+     * due to a storage quota breach.
+     */
+    void incrementQuotaRejection();
+
+    /**
+     * Records the current {@code storage_used_bytes} of a single user as a histogram observation.
+     * Used to track the distribution of per-user storage without high-cardinality {@code user_id} labels.
+     *
+     * @param bytes current storage used by the user, in bytes
+     */
+    void observeUserStorageBytes(long bytes);
 }

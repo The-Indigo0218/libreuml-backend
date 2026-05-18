@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,7 +54,7 @@ public class RegisterRateLimitFilter extends OncePerRequestFilter {
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
         } else {
-            writeTooManyRequests(response);
+            writeTooManyRequests(request, response);
         }
     }
 
@@ -73,9 +74,13 @@ public class RegisterRateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
-    private void writeTooManyRequests(HttpServletResponse response) throws IOException {
+    private void writeTooManyRequests(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setStatus(429);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"Registration limit exceeded. Try again in an hour.\"}");
+        response.getWriter().write(
+                "{\"status\":429,\"error\":\"Too Many Requests\","
+                + "\"message\":\"Registration limit exceeded. Try again in an hour.\","
+                + "\"timestamp\":\"" + Instant.now() + "\","
+                + "\"path\":\"" + request.getRequestURI() + "\"}");
     }
 }

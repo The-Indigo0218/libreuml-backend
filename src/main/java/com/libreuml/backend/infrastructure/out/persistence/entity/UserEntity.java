@@ -7,6 +7,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -72,4 +73,13 @@ public class UserEntity {
 
     @Column(name = "google_id")
     private String googleId;
+
+    @Column(name = "storage_quota_bytes", nullable = false)
+    private long storageQuotaBytes;
+
+    @Column(name = "storage_used_bytes", nullable = false)
+    private long storageUsedBytes;
+
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
 }

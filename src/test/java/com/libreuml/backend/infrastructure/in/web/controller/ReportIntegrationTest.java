@@ -52,6 +52,8 @@ class ReportIntegrationTest extends AbstractIntegrationTest {
 
         register(ownerEmail,    ownerIp);
         register(strangerEmail, strangerIp);
+        verifyUserEmail(ownerEmail);
+        verifyUserEmail(strangerEmail);
 
         ownerCookies    = login(ownerEmail,    ownerIp);
         strangerCookies = login(strangerEmail, strangerIp);
@@ -122,7 +124,7 @@ class ReportIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Non-authenticated user cannot access reports")
     void unauthenticatedUserCannotAccessReports() throws Exception {
         mockMvc.perform(get(REPORTS_URL + "/my"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

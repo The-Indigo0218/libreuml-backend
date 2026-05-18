@@ -27,11 +27,21 @@ public class JwtAdapter implements TokenProviderPort {
 
     @PostConstruct
     void validateSecret() {
-        byte[] secretBytes = Base64.getDecoder().decode(jwtSecret);
+        byte[] secretBytes;
+        try {
+            secretBytes = Base64.getDecoder().decode(jwtSecret);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                "JWT_SECRET is not valid Base64: " + e.getMessage() + ". " +
+                "Ensure the value is standard Base64 with length divisible by 4. " +
+                "Generate a new one with: openssl rand -base64 64"
+            );
+        }
         if (secretBytes.length < 64) {
             throw new IllegalStateException(
                 "JWT_SECRET must be at least 64 bytes (512 bits) of Base64-encoded random data. " +
-                "Generate with: openssl rand -base64 64"
+                "Current value decodes to only " + secretBytes.length + " bytes. " +
+                "Generate a new one with: openssl rand -base64 64"
             );
         }
     }

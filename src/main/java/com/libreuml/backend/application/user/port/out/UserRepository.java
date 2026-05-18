@@ -31,4 +31,6 @@ public interface UserRepository {
     Optional<User> findByGithubId(String githubId);
 
     Optional<User> findByGoogleId(String googleId);
+
+    long sumStorageUsedBytes();
 }

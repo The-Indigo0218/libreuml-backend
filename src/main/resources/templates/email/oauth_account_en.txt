@@ -1,0 +1,9 @@
+Password reset requested — LibreUML
+=====================================
+
+We received a password reset request for {{email}}, but this account
+uses GitHub or Google to sign in — it does not have a password.
+
+To access your account, sign in using the same provider you used when you registered.
+
+— The LibreUML team

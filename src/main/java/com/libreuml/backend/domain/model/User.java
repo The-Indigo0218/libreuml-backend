@@ -3,6 +3,7 @@ package com.libreuml.backend.domain.model;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -34,9 +35,32 @@ public abstract class User {
 
     private int passwordVersion;
 
-    // Nullable: set only when the user has authenticated via the respective OAuth provider.
     private String githubId;
     private String googleId;
+
+    private Instant emailVerifiedAt;
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
+    }
+
+    @Builder.Default
+    private long storageQuotaBytes = 5_242_880L;
+
+    @Builder.Default
+    private long storageUsedBytes = 0L;
+
+    public boolean hasQuotaFor(long bytes) {
+        return (this.storageUsedBytes + bytes) <= this.storageQuotaBytes;
+    }
+
+    public void incrementUsage(long bytes) {
+        this.storageUsedBytes += bytes;
+    }
+
+    public void decrementUsage(long bytes) {
+        this.storageUsedBytes = Math.max(0L, this.storageUsedBytes - bytes);
+    }
 
     public void changePassword(String newPassword) {
         this.password = newPassword;

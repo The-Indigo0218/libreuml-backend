@@ -1,0 +1,15 @@
+Verifica tu dirección de correo — LibreUML
+==========================================
+
+¡Gracias por registrarte! Por favor, verifica tu dirección de correo electrónico
+para desbloquear todas las funciones de LibreUML, incluyendo guardar diagramas
+y crear claves de API.
+
+Haz clic en el enlace de abajo para verificar tu correo (expira en 24 horas):
+
+  {{verificationUrl}}
+
+Si no creaste una cuenta en LibreUML, puedes ignorar este correo de forma segura.
+
+---
+Enviado a {{email}}

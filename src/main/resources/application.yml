@@ -2,6 +2,17 @@ spring:
   application:
     name: libreuml-backend
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+  mvc:
+    throw-exception-if-no-handler-found: true
+
+  web:
+    resources:
+      add-mappings: false
+
   datasource:
     url: jdbc:postgresql://localhost:5432/libreumldb
     username: postgres
@@ -20,6 +31,18 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:false}
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: 900000
@@ -32,6 +55,8 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    from: ${MAIL_FROM:noreply@libreuml.com}
   oauth:
     github:
       client-id: ${GITHUB_CLIENT_ID:}
