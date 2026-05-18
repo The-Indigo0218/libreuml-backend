@@ -271,7 +271,7 @@ No permite headers personalizados que podrían ser necesarios para features futu
 
 ### Medio (Corregir este mes)
 8. ~~Agregar maximumSize al cache de rate limiting~~ - ✅ COMPLETADO (authBuckets en RateLimitFilter ahora tiene maximumSize(10000). sortBy sanitizado con allowlist en PaginationCommand)
-9. Completar cobertura de tests para CourseService, EnrollmentService
+9. ~~Completar cobertura de tests para CourseService, EnrollmentService~~ - ✅ COMPLETADO (CourseServiceTest: 17 casos; EnrollmentServiceTest: 9 casos nuevos)
 10. ~~Implementar endpoint de exploración de proyectos públicos~~ - ✅ COMPLETADO (GET /api/v1/courses, /search, /tag/{tag}, /slug/{slug} y GET /api/v1/diagrams/public)
 11. ~~Validación de longitud máxima en todos los DTOs~~ - ✅ COMPLETADO (CreateCourseRequest, CreateReportRequest, CreateResourceRequest, ResponseReportRequest, UpdateTitleAndDescriptionCourseRequest, UpdateVisibilityRequest, UpdateTitleAndContentRequest)
 
