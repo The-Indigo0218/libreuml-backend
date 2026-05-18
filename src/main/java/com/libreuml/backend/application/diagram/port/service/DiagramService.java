@@ -1,5 +1,7 @@
 package com.libreuml.backend.application.diagram.port.service;
 
+import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.application.diagram.dto.CreateDiagramCommand;
 import com.libreuml.backend.application.diagram.dto.UpdateDiagramCommand;
@@ -52,6 +54,12 @@ public class DiagramService implements CreateDiagramUseCase, GetDiagramUseCase,
     @Transactional(readOnly = true)
     public List<Diagram> listByOwner(UUID ownerId) {
         return diagramRepository.findByOwnerId(ownerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResult<Diagram> listPublic(PaginationCommand pagination) {
+        return diagramRepository.findPublicDiagrams(pagination);
     }
 
     @Override

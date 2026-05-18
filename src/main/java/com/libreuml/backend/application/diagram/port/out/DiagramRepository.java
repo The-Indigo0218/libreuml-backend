@@ -1,5 +1,7 @@
 package com.libreuml.backend.application.diagram.port.out;
 
+import com.libreuml.backend.application.common.PagedResult;
+import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.domain.model.Diagram;
 
 import java.util.List;
@@ -11,4 +13,5 @@ public interface DiagramRepository {
     Optional<Diagram> findById(UUID id);
     List<Diagram> findByOwnerId(UUID ownerId);
     void deleteById(UUID id);
+    PagedResult<Diagram> findPublicDiagrams(PaginationCommand pagination);
 }
