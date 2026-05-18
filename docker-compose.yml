@@ -9,6 +9,9 @@ services:
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-postgres}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-password}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-change-in-production-must-be-long-enough}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@libreuml.local}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-Admin1234!}
     depends_on:
       db:
         condition: service_healthy
