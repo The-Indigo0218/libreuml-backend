@@ -30,6 +30,8 @@
         <java.version>21</java.version>
         <!-- CVE-2026-24734 (CVSS 7.5): patched in 10.1.51+; Spring Boot 3.5.10 ships 10.1.50 -->
         <tomcat.version>10.1.52</tomcat.version>
+        <!-- Override Spring Boot BOM logback pin (1.5.25) to pick up patches through 1.5.32 -->
+        <logback.version>1.5.32</logback.version>
     </properties>
     <dependencies>
         <dependency>
@@ -105,18 +107,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.6</version>
+            <version>0.13.0</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.6</version>
+            <version>0.13.0</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.6</version>
+            <version>0.13.0</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -132,12 +134,14 @@
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
-            <version>1.2.1</version> <scope>test</scope>
+            <version>1.4.2</version>
+            <scope>test</scope>
         </dependency>
+        <!-- CVE-2024-29857, CVE-2024-30171, CVE-2024-30172, CVE-2024-34447 and further fixes through 1.84 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.77</version>
+            <version>1.84</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
@@ -173,7 +177,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>8.0</version>
+            <version>9.0</version>
         </dependency>
 
         <!-- OpenAPI / Swagger UI — API documentation served at /api/docs -->
