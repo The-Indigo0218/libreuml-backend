@@ -18,6 +18,7 @@ import com.libreuml.backend.application.diagram.exception.DiagramConflictExcepti
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
 import com.libreuml.backend.application.enrollment.exception.EnrollmentAlreadyExistsException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
+import com.libreuml.backend.application.user.exception.AccountDisabledException;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -139,6 +140,12 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(UserNotAuthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUserNotAuthorized(
             UserNotAuthorizedException ex, HttpServletRequest req) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(AccountDisabledException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDisabled(
+            AccountDisabledException ex, HttpServletRequest req) {
         return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 

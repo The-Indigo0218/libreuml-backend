@@ -2,6 +2,7 @@ package com.libreuml.backend.infrastructure.in.web.filter;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.libreuml.backend.infrastructure.in.web.util.ClientIpResolver;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -9,6 +10,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,10 +26,13 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Order(2)
+@RequiredArgsConstructor
 public class RegisterRateLimitFilter extends OncePerRequestFilter {
 
     private static final int REGISTRATIONS_PER_HOUR = 3;
     private static final String REGISTER_PATH = "/api/v1/auth/register";
+
+    private final ClientIpResolver clientIpResolver;
 
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .expireAfterWrite(2, TimeUnit.HOURS)
@@ -48,7 +53,7 @@ public class RegisterRateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = resolveClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
         Bucket bucket = buckets.get(clientIp, ip -> buildBucket());
 
         if (bucket.tryConsume(1)) {
@@ -64,14 +69,6 @@ public class RegisterRateLimitFilter extends OncePerRequestFilter {
                 Refill.intervally(REGISTRATIONS_PER_HOUR, Duration.ofHours(1))
         );
         return Bucket.builder().addLimit(limit).build();
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 
     private void writeTooManyRequests(HttpServletRequest request, HttpServletResponse response) throws IOException {

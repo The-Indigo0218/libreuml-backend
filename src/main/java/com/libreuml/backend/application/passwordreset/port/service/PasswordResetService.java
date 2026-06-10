@@ -3,6 +3,7 @@ package com.libreuml.backend.application.passwordreset.port.service;
 import com.libreuml.backend.application.passwordreset.exception.InvalidPasswordResetTokenException;
 import com.libreuml.backend.application.passwordreset.port.in.RequestPasswordResetUseCase;
 import com.libreuml.backend.application.passwordreset.port.in.ResetPasswordUseCase;
+import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
 import com.libreuml.backend.application.passwordreset.port.out.PasswordResetTokenRepository;
 import com.libreuml.backend.application.emailverification.port.out.EmailSenderPort;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -36,6 +37,7 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailSenderPort emailSenderPort;
     private final PasswordEncoderPort passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -90,6 +92,9 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
 
         token.setUsedAt(Instant.now());
         tokenRepository.save(token);
+
+        // A reset implies the account may be compromised — drop every existing session.
+        refreshTokenRepository.deleteAllByUserId(user.getId());
     }
 
     private boolean isOAuthOnly(User user) {

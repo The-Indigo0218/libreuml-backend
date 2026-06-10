@@ -4,6 +4,7 @@ import com.libreuml.backend.application.auth.dto.TokenPair;
 import com.libreuml.backend.application.auth.port.in.LoginWithRefreshUseCase;
 import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
+import com.libreuml.backend.application.user.exception.AccountDisabledException;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.in.dto.LoginCommand;
@@ -51,6 +52,11 @@ public class AuthService implements LoginWithRefreshUseCase {
         if (!passwordEncoder.matches(command.password(), user.getPassword())) {
             metricsPort.incrementFailedLogin();
             throw new IncorrectPasswordException("Incorrect password");
+        }
+
+        if (Boolean.FALSE.equals(user.getActive())) {
+            metricsPort.incrementFailedLogin();
+            throw new AccountDisabledException("Account is disabled.");
         }
 
         metricsPort.incrementActiveUsersDaily("credential");
