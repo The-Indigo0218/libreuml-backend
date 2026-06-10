@@ -49,6 +49,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF protection is intentionally disabled because this API does not rely on
+                // ambient browser authority that a forged cross-site request could abuse:
+                //  - The auth cookies (__Host-jwt / __Host-refresh) are set with SameSite=Strict,
+                //    so browsers never attach them to cross-site requests — this is the primary
+                //    anti-CSRF control and MUST NOT be weakened (see CookieTokenStrategy).
+                //  - The alternative transports (Authorization: Bearer / ApiKey) are not sent
+                //    automatically by the browser, so they are inherently immune to CSRF.
+                // If a non-Strict SameSite policy is ever needed, re-enable CSRF tokens here.
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
@@ -58,6 +66,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         // Actuator: liveness/readiness probes and Prometheus scraping are unauthenticated.
                         // All other management endpoints (/internal/metrics, /internal/info) require auth.
+                        // SECURITY: /internal/prometheus exposes operational metrics (user counts,
+                        // failed logins, etc.) without auth because scrapers cannot present a JWT cookie.
+                        // It MUST be restricted at the network layer (firewall / ingress rule) so only
+                        // the metrics collector can reach it — never expose this path publicly.
                         .requestMatchers("/internal/health/**").permitAll()
                         .requestMatchers("/internal/prometheus").permitAll()
                         // OpenAPI / Swagger UI: documentation endpoints are public (no sensitive data).

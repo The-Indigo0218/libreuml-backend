@@ -75,9 +75,13 @@ logging:
     root: info
 
 springdoc:
+  # Disabled by default so the API surface is not exposed in production.
+  # The dev profile re-enables both endpoints (see application-dev.yml).
   swagger-ui:
+    enabled: false
     path: /api/docs          # Swagger UI served at /api/docs
   api-docs:
+    enabled: false
     path: /api/api-docs      # OpenAPI JSON served at /api/api-docs
 
 management:

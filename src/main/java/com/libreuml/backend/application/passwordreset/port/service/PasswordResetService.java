@@ -33,6 +33,11 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
     private static final int TOKEN_VALIDITY_HOURS = 1;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    // A single, generic message for every failure mode (not found / used / expired) so the
+    // response never reveals whether a given reset token actually existed or its state.
+    private static final String INVALID_RESET_MESSAGE =
+            "Invalid or expired reset link. Please request a new one.";
+
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailSenderPort emailSenderPort;
@@ -74,14 +79,10 @@ public class PasswordResetService implements RequestPasswordResetUseCase, ResetP
         String hash = sha256Hex(rawToken);
 
         PasswordResetToken token = tokenRepository.findByTokenHash(hash)
-                .orElseThrow(() -> new InvalidPasswordResetTokenException("Invalid or expired reset link."));
+                .orElseThrow(() -> new InvalidPasswordResetTokenException(INVALID_RESET_MESSAGE));
 
-        if (token.isUsed()) {
-            throw new InvalidPasswordResetTokenException("This reset link has already been used.");
-        }
-
-        if (token.isExpired()) {
-            throw new InvalidPasswordResetTokenException("This reset link has expired. Please request a new one.");
+        if (token.isUsed() || token.isExpired()) {
+            throw new InvalidPasswordResetTokenException(INVALID_RESET_MESSAGE);
         }
 
         User user = userRepository.getUserById(token.getUserId())
