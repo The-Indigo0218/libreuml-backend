@@ -4,7 +4,8 @@ import com.libreuml.backend.infrastructure.security.ApiKeyAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.CustomUserDetailsService;
 import com.libreuml.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.JwtCookieAuthFilter;
-import org.springframework.http.HttpStatus;
+import com.libreuml.backend.infrastructure.security.SecurityErrorWriter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,7 @@ public class SecurityConfig {
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
+    private final SecurityErrorWriter errorWriter;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private List<String> allowedOrigins;
@@ -90,13 +92,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationEntryPoint unauthorizedEntryPoint() {
-        return (request, response, ex) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write(
-                "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Authentication required.\",\"path\":\"" + request.getRequestURI() + "\"}"
-            );
-        };
+        return (request, response, ex) ->
+                errorWriter.write(request, response,
+                        HttpServletResponse.SC_UNAUTHORIZED, "Authentication required.");
     }
 
     @Bean
