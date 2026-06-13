@@ -1,0 +1,34 @@
+meta {
+  name: 02 List projects
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/api/v1/projects?page=0&size=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+params:query {
+  page: 0
+  size: 20
+}
+
+tests {
+  test("lists projects with diagram counts", function() {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body).to.have.property("content");
+    expect(body).to.have.property("totalElements");
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

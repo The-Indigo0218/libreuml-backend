@@ -1,0 +1,36 @@
+meta {
+  name: 04 Update project
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:8080/api/v1/projects/{{projectId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "description": "Updated from Bruno",
+    "targetLanguage": "Kotlin",
+    "vfsSnapshot": { "root": { "type": "FOLDER", "children": ["diagram-1"] } },
+    "version": {{projectVersion}}
+  }
+}
+
+tests {
+  test("updates project and bumps version", function() {
+    expect(res.getStatus()).to.equal(200);
+    bru.setEnvVar("projectVersion", res.getBody().version);
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
