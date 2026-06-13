@@ -8,6 +8,7 @@ import com.libreuml.backend.application.emailverification.exception.EmailNotVeri
 import com.libreuml.backend.application.project.dto.CreateProjectCommand;
 import com.libreuml.backend.application.project.dto.CreateProjectResult;
 import com.libreuml.backend.application.project.dto.ProjectFull;
+import com.libreuml.backend.application.project.dto.ProjectSummary;
 import com.libreuml.backend.application.project.dto.UpdateProjectCommand;
 import com.libreuml.backend.application.project.exception.ModelNotFoundException;
 import com.libreuml.backend.application.project.exception.ProjectConflictException;
@@ -23,6 +24,7 @@ import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.Project;
 import com.libreuml.backend.domain.model.ProjectDiagram;
+import com.libreuml.backend.domain.model.ProjectDiagramType;
 import com.libreuml.backend.domain.model.SemanticModel;
 import com.libreuml.backend.domain.model.User;
 import com.libreuml.backend.domain.model.exception.ProjectOwnershipException;
@@ -33,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -108,8 +111,21 @@ public class ProjectService implements CreateProjectUseCase, GetProjectUseCase,
 
     @Override
     @Transactional(readOnly = true)
-    public PagedResult<Project> listByOwner(UUID ownerId, int page, int size) {
-        return projectRepository.findAllByOwnerId(ownerId, page, size);
+    public PagedResult<ProjectSummary> listByOwner(UUID ownerId, int page, int size) {
+        PagedResult<Project> projects = projectRepository.findAllByOwnerId(ownerId, page, size);
+
+        List<UUID> projectIds = projects.content().stream().map(Project::getId).toList();
+        Map<UUID, List<ProjectDiagramType>> typesByProject =
+                projectDiagramRepository.findDiagramTypesByProjectIds(projectIds);
+
+        List<ProjectSummary> summaries = projects.content().stream().map(project -> {
+            List<ProjectDiagramType> types = typesByProject.getOrDefault(project.getId(), List.of());
+            List<ProjectDiagramType> distinct = types.stream().distinct().toList();
+            return new ProjectSummary(project, types.size(), distinct);
+        }).toList();
+
+        return new PagedResult<>(summaries, projects.pageNumber(), projects.pageSize(),
+                projects.totalElements(), projects.totalPages(), projects.isLast());
     }
 
     @Override

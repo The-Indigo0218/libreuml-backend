@@ -2,12 +2,17 @@ package com.libreuml.backend.infrastructure.out.persistence.adapter;
 
 import com.libreuml.backend.application.project.port.out.ProjectDiagramRepository;
 import com.libreuml.backend.domain.model.ProjectDiagram;
+import com.libreuml.backend.domain.model.ProjectDiagramType;
 import com.libreuml.backend.infrastructure.out.persistence.entity.ProjectDiagramEntity;
 import com.libreuml.backend.infrastructure.out.persistence.repository.SpringDataProjectDiagramRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,6 +42,18 @@ public class ProjectDiagramPersistenceAdapter implements ProjectDiagramRepositor
     @Override
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public Map<UUID, List<ProjectDiagramType>> findDiagramTypesByProjectIds(Collection<UUID> projectIds) {
+        if (projectIds.isEmpty()) return Map.of();
+        Map<UUID, List<ProjectDiagramType>> byProject = new HashMap<>();
+        for (Object[] row : jpaRepository.findProjectIdAndType(projectIds)) {
+            UUID projectId = (UUID) row[0];
+            ProjectDiagramType type = (ProjectDiagramType) row[1];
+            byProject.computeIfAbsent(projectId, k -> new ArrayList<>()).add(type);
+        }
+        return byProject;
     }
 
     private ProjectDiagramEntity toEntity(ProjectDiagram diagram) {
