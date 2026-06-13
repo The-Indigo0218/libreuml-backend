@@ -1,6 +1,7 @@
 package com.libreuml.backend.application.common.port.out;
 
 import com.libreuml.backend.domain.model.DiagramType;
+import com.libreuml.backend.domain.model.ProjectKind;
 
 /**
  * Output port for recording business-level metrics.
@@ -22,6 +23,13 @@ public interface MetricsPort {
      * @param type the diagram type used as a low-cardinality Prometheus label
      */
     void incrementDiagramSaved(DiagramType type);
+
+    /**
+     * Records that a project was successfully created.
+     *
+     * @param kind the project kind used as a low-cardinality Prometheus label
+     */
+    void incrementProjectSaved(ProjectKind kind);
 
     /**
      * Records that a new user account was created via the standard registration flow.

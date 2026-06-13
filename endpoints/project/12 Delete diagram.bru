@@ -1,0 +1,26 @@
+meta {
+  name: 12 Delete diagram
+  type: http
+  seq: 12
+}
+
+delete {
+  url: http://localhost:8080/api/v1/projects/{{projectId}}/diagrams/{{diagramId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+tests {
+  test("deletes the diagram", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

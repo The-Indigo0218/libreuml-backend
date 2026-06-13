@@ -1,0 +1,27 @@
+meta {
+  name: 08 List diagrams
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8080/api/v1/projects/{{projectId}}/diagrams
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+tests {
+  test("lists the project's diagrams", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.be.an("array");
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

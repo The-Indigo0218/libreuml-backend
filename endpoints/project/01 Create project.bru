@@ -1,0 +1,45 @@
+meta {
+  name: 01 Create project
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/v1/projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "name": "Bru Test Project",
+    "description": "Created from the Bruno endpoint collection",
+    "author": "teacher@libreuml.com",
+    "projectVersion": "1.0.0",
+    "projectKind": "SOFTWARE_ARCHITECTURE",
+    "targetLanguage": "Java",
+    "basePackage": "com.example.demo",
+    "vfsSnapshot": { "root": { "type": "FOLDER", "children": [] } }
+  }
+}
+
+tests {
+  test("creates a project with an empty model", function() {
+    expect(res.getStatus()).to.equal(201);
+    const data = res.getBody();
+    bru.setEnvVar("projectId", data.id);
+    bru.setEnvVar("modelId", data.modelId);
+    bru.setEnvVar("projectVersion", data.version);
+    // The semantic model is created empty at version 0; the first model PATCH sends this.
+    bru.setEnvVar("modelVersion", 0);
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
