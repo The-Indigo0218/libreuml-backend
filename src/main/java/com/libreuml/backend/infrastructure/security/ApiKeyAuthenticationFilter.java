@@ -10,6 +10,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +35,9 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -75,6 +78,28 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiKeyRepository apiKeyRepository;
     private final UserRepository   userRepository;
+    private final SecurityErrorWriter errorWriter;
+
+    /**
+     * Dedicated, bounded executor for fire-and-forget usage tracking. Keeping it off the
+     * shared {@code ForkJoinPool.commonPool()} prevents bursts of API-key traffic from
+     * starving parallel streams elsewhere. When the queue is full, the oldest pending
+     * update is dropped — usage counters are best-effort and must never block requests.
+     */
+    private final ExecutorService usageExecutor = new ThreadPoolExecutor(
+            1, 2, 30L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(500),
+            runnable -> {
+                Thread thread = new Thread(runnable, "apikey-usage-tracker");
+                thread.setDaemon(true);
+                return thread;
+            },
+            new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    @PreDestroy
+    void shutdownUsageExecutor() {
+        usageExecutor.shutdown();
+    }
 
     /**
      * Separate caches for READ and WRITE buckets so each scope has its own daily quota.
@@ -151,7 +176,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
         // Fire-and-forget usage tracking — must not block the response path.
         final UUID keyId = apiKey.getId();
-        CompletableFuture.runAsync(() -> {
+        usageExecutor.execute(() -> {
             try {
                 apiKeyRepository.recordUsage(keyId);
             } catch (Exception ex) {
@@ -221,18 +246,6 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private void writeError(HttpServletRequest request, HttpServletResponse response, int status, String message)
             throws IOException {
-        String errorPhrase = switch (status) {
-            case 401 -> "Unauthorized";
-            case 403 -> "Forbidden";
-            case 429 -> "Too Many Requests";
-            default  -> "Error";
-        };
-        response.setStatus(status);
-        response.setContentType("application/json");
-        response.getWriter().write(
-                "{\"status\":" + status + ",\"error\":\"" + errorPhrase + "\","
-                + "\"message\":\"" + message + "\","
-                + "\"timestamp\":\"" + Instant.now() + "\","
-                + "\"path\":\"" + request.getRequestURI() + "\"}");
+        errorWriter.write(request, response, status, message);
     }
 }

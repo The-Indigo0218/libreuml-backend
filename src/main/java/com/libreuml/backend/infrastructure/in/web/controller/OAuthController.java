@@ -7,6 +7,7 @@ import com.libreuml.backend.application.auth.exception.OAuthException;
 import com.libreuml.backend.application.auth.port.in.OAuthAuthorizeUseCase;
 import com.libreuml.backend.application.auth.port.in.OAuthLoginUseCase;
 import com.libreuml.backend.infrastructure.in.web.dto.response.auth.OAuthAuthorizeResponse;
+import com.libreuml.backend.infrastructure.in.web.util.ClientIpResolver;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ public class OAuthController {
     private final OAuthAuthorizeUseCase oAuthAuthorizeUseCase;
     private final OAuthLoginUseCase oAuthLoginUseCase;
     private final CookieTokenStrategy cookieTokenStrategy;
+    private final ClientIpResolver clientIpResolver;
 
     @Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
@@ -76,7 +78,7 @@ public class OAuthController {
                 state,
                 buildCallbackUri(request, provider),
                 oAuthProvider,
-                resolveClientIp(request),
+                clientIpResolver.resolve(request),
                 request.getHeader("User-Agent")
         );
 
@@ -101,13 +103,5 @@ public class OAuthController {
         return request.getScheme() + "://"
                 + request.getServerName() + ":" + request.getServerPort()
                 + "/api/v1/oauth/" + provider.toLowerCase() + "/callback";
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

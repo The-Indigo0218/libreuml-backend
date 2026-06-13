@@ -1,8 +1,10 @@
 package com.libreuml.backend.application.user.port.service;
 
+import com.libreuml.backend.application.auth.port.out.RefreshTokenRepository;
 import com.libreuml.backend.application.common.PagedResult;
 import com.libreuml.backend.application.common.dto.PaginationCommand;
 import com.libreuml.backend.application.common.port.out.MetricsPort;
+import com.libreuml.backend.application.user.exception.AccountDisabledException;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
@@ -19,6 +21,7 @@ import com.libreuml.backend.application.user.port.out.UserRepository;
 import com.libreuml.backend.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +36,7 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
     private final TokenProviderPort tokenProvider;
     private final UserMapper userMapper;
     private final MetricsPort metricsPort;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public User create(CreateUserCommand command) {
@@ -87,6 +91,9 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
         User user = userRepository.findByEmail(command.email())
                 .orElseThrow(() -> new UserNotFoundException("User with email " + command.email() + " not found"));
         comparePasswords(command.password(), user.getPassword());
+        if (Boolean.FALSE.equals(user.getActive())) {
+            throw new AccountDisabledException("Account is disabled.");
+        }
         return tokenProvider.generateToken(user);
     }
 
@@ -112,6 +119,8 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
             throw new UserAlreadyExistsException("User with email " + command.email() + " already exists.");
         }
         userMapper.updateEmailFromCommand(command, user);
+        // A new email must be re-verified; the previous verification no longer applies.
+        user.setEmailVerifiedAt(null);
         return userRepository.save(user);
     }
 
@@ -123,12 +132,17 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, LoginUseC
     }
 
     @Override
+    @Transactional
     public User updateUserPassword(ChangePasswordCommand command) {
         User user = getUserOrThrow(command.id());
         comparePasswords(command.currentPassword(), user.getPassword());
         String encodedNewPassword = encodePassword(command.newPassword());
         user.changePassword(encodedNewPassword);
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        // Invalidate every outstanding refresh token so a stolen session cannot survive
+        // a password change. Access tokens are already rejected via the pwdVersion claim.
+        refreshTokenRepository.deleteAllByUserId(user.getId());
+        return saved;
     }
 
     @Override

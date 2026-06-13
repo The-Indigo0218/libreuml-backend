@@ -4,7 +4,8 @@ import com.libreuml.backend.infrastructure.security.ApiKeyAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.CustomUserDetailsService;
 import com.libreuml.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.libreuml.backend.infrastructure.security.JwtCookieAuthFilter;
-import org.springframework.http.HttpStatus;
+import com.libreuml.backend.infrastructure.security.SecurityErrorWriter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,7 @@ public class SecurityConfig {
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
+    private final SecurityErrorWriter errorWriter;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private List<String> allowedOrigins;
@@ -47,6 +49,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF protection is intentionally disabled because this API does not rely on
+                // ambient browser authority that a forged cross-site request could abuse:
+                //  - The auth cookies (__Host-jwt / __Host-refresh) are set with SameSite=Strict,
+                //    so browsers never attach them to cross-site requests — this is the primary
+                //    anti-CSRF control and MUST NOT be weakened (see CookieTokenStrategy).
+                //  - The alternative transports (Authorization: Bearer / ApiKey) are not sent
+                //    automatically by the browser, so they are inherently immune to CSRF.
+                // If a non-Strict SameSite policy is ever needed, re-enable CSRF tokens here.
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
@@ -56,6 +66,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         // Actuator: liveness/readiness probes and Prometheus scraping are unauthenticated.
                         // All other management endpoints (/internal/metrics, /internal/info) require auth.
+                        // SECURITY: /internal/prometheus exposes operational metrics (user counts,
+                        // failed logins, etc.) without auth because scrapers cannot present a JWT cookie.
+                        // It MUST be restricted at the network layer (firewall / ingress rule) so only
+                        // the metrics collector can reach it — never expose this path publicly.
                         .requestMatchers("/internal/health/**").permitAll()
                         .requestMatchers("/internal/prometheus").permitAll()
                         // OpenAPI / Swagger UI: documentation endpoints are public (no sensitive data).
@@ -90,13 +104,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationEntryPoint unauthorizedEntryPoint() {
-        return (request, response, ex) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write(
-                "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Authentication required.\",\"path\":\"" + request.getRequestURI() + "\"}"
-            );
-        };
+        return (request, response, ex) ->
+                errorWriter.write(request, response,
+                        HttpServletResponse.SC_UNAUTHORIZED, "Authentication required.");
     }
 
     @Bean

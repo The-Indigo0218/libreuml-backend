@@ -2,6 +2,7 @@ package com.libreuml.backend.infrastructure.out.metrics;
 
 import com.libreuml.backend.application.common.port.out.MetricsPort;
 import com.libreuml.backend.domain.model.DiagramType;
+import com.libreuml.backend.domain.model.ProjectKind;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -35,6 +36,15 @@ public class MicrometerMetricsAdapter implements MetricsPort {
         Counter.builder("libreuml.diagrams.saved")
                 .tag("type", type.name().toLowerCase())
                 .description("Total number of diagrams successfully persisted")
+                .register(meterRegistry)
+                .increment();
+    }
+
+    @Override
+    public void incrementProjectSaved(ProjectKind kind) {
+        Counter.builder("libreuml.projects.saved")
+                .tag("kind", kind.name().toLowerCase())
+                .description("Total number of projects successfully created")
                 .register(meterRegistry)
                 .increment();
     }

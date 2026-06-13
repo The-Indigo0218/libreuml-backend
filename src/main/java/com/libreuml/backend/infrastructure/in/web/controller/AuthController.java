@@ -15,6 +15,7 @@ import com.libreuml.backend.infrastructure.in.web.dto.request.auth.LoginRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.RegisterRequest;
 import com.libreuml.backend.infrastructure.in.web.dto.request.auth.ResetPasswordRequest;
 import com.libreuml.backend.infrastructure.in.web.mapper.AuthWebMapper;
+import com.libreuml.backend.infrastructure.in.web.util.ClientIpResolver;
 import com.libreuml.backend.infrastructure.security.CustomUserDetails;
 import com.libreuml.backend.infrastructure.security.cookie.CookieTokenStrategy;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +41,7 @@ public class AuthController {
     private final ConfirmEmailUseCase confirmEmailUseCase;
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ClientIpResolver clientIpResolver;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest request) {
@@ -55,7 +57,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         var command = authWebMapper.toLoginCommand(body);
-        TokenPair tokens = loginWithRefreshUseCase.login(command, resolveClientIp(request), request.getHeader("User-Agent"));
+        TokenPair tokens = loginWithRefreshUseCase.login(command, clientIpResolver.resolve(request), request.getHeader("User-Agent"));
 
         cookieTokenStrategy.setAccessTokenCookie(response, tokens.accessToken());
         cookieTokenStrategy.setRefreshTokenCookie(response, tokens.rawRefreshToken());
@@ -70,7 +72,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        var command = new RefreshCommand(rawRefreshToken, resolveClientIp(request), request.getHeader("User-Agent"));
+        var command = new RefreshCommand(rawRefreshToken, clientIpResolver.resolve(request), request.getHeader("User-Agent"));
         TokenPair tokens = refreshTokenUseCase.refresh(command);
 
         cookieTokenStrategy.setAccessTokenCookie(response, tokens.accessToken());
@@ -116,13 +118,5 @@ public class AuthController {
     public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         resetPasswordUseCase.reset(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

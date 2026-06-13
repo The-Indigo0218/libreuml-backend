@@ -2,6 +2,7 @@ package com.libreuml.backend.infrastructure.in.web.filter;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.libreuml.backend.infrastructure.in.web.util.ClientIpResolver;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -9,6 +10,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -27,12 +29,15 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Order(1)
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final int AUTH_RATE_LIMIT = 10;
     private static final int ADMIN_RATE_LIMIT = 30;
     private static final String AUTH_PATH_PREFIX = "/api/v1/auth/";
     private static final String ADMIN_PATH_PREFIX = "/api/v1/reports";
+
+    private final ClientIpResolver clientIpResolver;
 
     private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
             .expireAfterWrite(2, TimeUnit.MINUTES)
@@ -77,7 +82,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             int rateLimit,
             String type
     ) throws ServletException, IOException {
-        String clientIp = resolveClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
         Bucket bucket = buckets.get(clientIp, ip -> buildBucket(rateLimit));
 
         if (bucket.tryConsume(1)) {
@@ -93,14 +98,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 Refill.intervally(requestsPerMinute, Duration.ofMinutes(1))
         );
         return Bucket.builder().addLimit(limit).build();
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 
     private void writeTooManyRequests(HttpServletResponse response, String type) throws IOException {

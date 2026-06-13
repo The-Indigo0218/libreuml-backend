@@ -17,7 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.Instant;
 
 /**
  * Hybrid authentication filter supporting two token transports:
@@ -34,6 +33,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
     private final TokenProviderPort tokenProvider;
     private final UserDetailsService userDetailsService;
     private final CookieTokenStrategy cookieTokenStrategy;
+    private final SecurityErrorWriter errorWriter;
 
     @Override
     protected void doFilterInternal(
@@ -71,13 +71,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
     private void writeUnauthorized(HttpServletRequest request, HttpServletResponse response, String message)
             throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write(
-                "{\"status\":401,\"error\":\"Unauthorized\","
-                + "\"message\":\"" + message + "\","
-                + "\"timestamp\":\"" + Instant.now() + "\","
-                + "\"path\":\"" + request.getRequestURI() + "\"}");
+        errorWriter.write(request, response, HttpServletResponse.SC_UNAUTHORIZED, message);
     }
 
     private String resolveToken(HttpServletRequest request) {

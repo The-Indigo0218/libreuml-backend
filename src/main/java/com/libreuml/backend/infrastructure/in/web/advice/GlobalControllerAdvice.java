@@ -16,13 +16,22 @@ import com.libreuml.backend.application.courses.exception.CourseNotFoundExceptio
 import com.libreuml.backend.application.report.exception.ReportNotFoundException;
 import com.libreuml.backend.application.diagram.exception.DiagramConflictException;
 import com.libreuml.backend.application.diagram.exception.DiagramNotFoundException;
+import com.libreuml.backend.application.project.exception.ModelConflictException;
+import com.libreuml.backend.application.project.exception.ModelNotFoundException;
+import com.libreuml.backend.application.project.exception.ProjectConflictException;
+import com.libreuml.backend.application.project.exception.ProjectDiagramConflictException;
+import com.libreuml.backend.application.project.exception.ProjectDiagramNotFoundException;
+import com.libreuml.backend.application.project.exception.ProjectNotFoundException;
 import com.libreuml.backend.application.enrollment.exception.EnrollmentAlreadyExistsException;
 import com.libreuml.backend.application.resource.exception.ResourceNotFoundException;
+import com.libreuml.backend.application.user.exception.AccountDisabledException;
 import com.libreuml.backend.application.user.exception.IncorrectPasswordException;
 import com.libreuml.backend.application.user.exception.UserAlreadyExistsException;
 import com.libreuml.backend.application.user.exception.UserNotFoundException;
 import com.libreuml.backend.domain.model.exception.DiagramOwnershipException;
 import com.libreuml.backend.domain.model.exception.DiagramPayloadTooLargeException;
+import com.libreuml.backend.domain.model.exception.ProjectOwnershipException;
+import com.libreuml.backend.domain.model.exception.ProjectPayloadTooLargeException;
 import com.libreuml.backend.domain.model.exception.QuotaExceededException;
 import com.libreuml.backend.domain.model.exception.UserNotAuthorizedException;
 import com.libreuml.backend.infrastructure.in.web.dto.response.ErrorResponse;
@@ -104,6 +113,13 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
     }
 
+    @ExceptionHandler({ProjectNotFoundException.class, ModelNotFoundException.class,
+            ProjectDiagramNotFoundException.class})
+    public ResponseEntity<ErrorResponse> handleProjectNotFound(
+            RuntimeException ex, HttpServletRequest req) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCourseNotFound(
             CourseNotFoundException ex, HttpServletRequest req) {
@@ -142,6 +158,12 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(AccountDisabledException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDisabled(
+            AccountDisabledException ex, HttpServletRequest req) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(DiagramOwnershipException.class)
     public ResponseEntity<ErrorResponse> handleDiagramOwnership(
             DiagramOwnershipException ex, HttpServletRequest req) {
@@ -151,6 +173,12 @@ public class GlobalControllerAdvice {
     @ExceptionHandler(ApiKeyOwnershipException.class)
     public ResponseEntity<ErrorResponse> handleApiKeyOwnership(
             ApiKeyOwnershipException ex, HttpServletRequest req) {
+        return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ProjectOwnershipException.class)
+    public ResponseEntity<ErrorResponse> handleProjectOwnership(
+            ProjectOwnershipException ex, HttpServletRequest req) {
         return error(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 
@@ -180,6 +208,13 @@ public class GlobalControllerAdvice {
         return error(HttpStatus.CONFLICT, ex.getMessage(), req);
     }
 
+    @ExceptionHandler({ProjectConflictException.class, ModelConflictException.class,
+            ProjectDiagramConflictException.class})
+    public ResponseEntity<ErrorResponse> handleProjectConflict(
+            RuntimeException ex, HttpServletRequest req) {
+        return error(HttpStatus.CONFLICT, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleOptimisticLocking(
             ObjectOptimisticLockingFailureException ex, HttpServletRequest req) {
@@ -188,9 +223,9 @@ public class GlobalControllerAdvice {
 
     // ── Unprocessable Entity (422) ────────────────────────────────────────────
 
-    @ExceptionHandler(DiagramPayloadTooLargeException.class)
+    @ExceptionHandler({DiagramPayloadTooLargeException.class, ProjectPayloadTooLargeException.class})
     public ResponseEntity<ErrorResponse> handleDiagramPayloadTooLarge(
-            DiagramPayloadTooLargeException ex, HttpServletRequest req) {
+            RuntimeException ex, HttpServletRequest req) {
         return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), req);
     }
 
